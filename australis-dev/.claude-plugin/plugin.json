@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "australis-dev",
+  "displayName": "Australis Dev Module",
+  "version": "1.0.0",
+  "description": "Australis development capability module: SDD workflow (agents, commands, skills), PR/commit flow, judgment-day review, and n8n workflow analysis. Enable for dev sessions; disable to hand the harness to a non-dev.",
+  "author": {
+    "name": "Australis AI"
+  },
+  "keywords": ["sdd", "dev", "pr-flow", "n8n", "code-review"]
+}
