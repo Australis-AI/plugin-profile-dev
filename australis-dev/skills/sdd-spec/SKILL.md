@@ -1,6 +1,6 @@
 ---
 name: sdd-spec
-description: "Definir el contrato de un cambio antes de escribir código: intención, alcance, comportamientos numerados que el usuario aprueba y la lista ordenada de tareas. Trigger: el orquestador arranca la fase spec de un cambio, o el usuario pide 'qué va a hacer esto', 'definí el alcance', 'armá el contrato del cambio'."
+description: "Define el contrato del cambio antes de escribir código: alcance, comportamientos numerados que el usuario aprueba y las tareas ordenadas. Trigger: fase spec del orquestador, qué va a hacer esto, definí el alcance."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
@@ -48,7 +48,7 @@ From the orchestrator:
 - Change name (kebab-case slug, e.g. `add-dark-mode`). If none was given, derive one from the user's request.
 - The exploration result, or the user's direct description of the change.
 
-There is no persistence mode and no delivery strategy parameter. Both were removed. Never ask the user about either.
+You receive no persistence mode and no delivery strategy: both are fixed defaults you apply yourself. Never ask the user about either.
 
 ## Persistence — always, never a question
 
@@ -213,7 +213,7 @@ Task rules:
 
 ### Step 6 — Resolve the Review Workload Forecast silently
 
-The forecast is a signal for the orchestrator, **never a question for the user**. The delivery-strategy and chain-strategy questions older versions asked are removed, and the `delivery_strategy` caching described in Section E does not apply to this phase.
+The forecast is a signal for the orchestrator, **never a question for the user**. Delivery and chain strategy are the fixed constants above; emit them and move on.
 
 Resolve it like this, with no interruption:
 

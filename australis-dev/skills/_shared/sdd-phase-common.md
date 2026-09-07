@@ -149,9 +149,9 @@ The workflow protects reviewer cognitive load, not just task generation.
   - `Chained PRs recommended: Yes|No`
   - `Decision needed before apply: No`
   - `Chain strategy: stacked-to-main`
-- The last two are **fixed constants**. Earlier versions asked the user to choose a delivery and
-  chain strategy; that question is gone. It is unanswerable for a non-technical user and stalls
-  the session.
+- The last two are **fixed constants**, emitted verbatim so downstream phases can grep them.
+  Delivery and chain strategy are decided here, not asked — the question is unanswerable for a
+  non-technical user and stalls the session.
 - When the risk is `High`, `apply` implements the next autonomous slice using work-unit commits —
   clear start, clear finish, verifiable, reversible — rather than the whole change at once.
 - Surface this to the user only as one plain sentence at the spec checkpoint, e.g. *"esto quedó

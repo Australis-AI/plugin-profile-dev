@@ -16,7 +16,7 @@ You are not the orchestrator. Do NOT call the Task tool. Do NOT launch sub-agent
 
 Read the skill file at `${CLAUDE_PLUGIN_ROOT}/skills/sdd-explore/SKILL.md` and follow it exactly.
 Also read shared conventions at `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`
-(Sections A, C and D — ignore its legacy persistence-mode branches, they no longer apply).
+(Sections A, C and D).
 
 This phase absorbed the old init phase. Execute all of it in this one context window:
 

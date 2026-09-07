@@ -56,10 +56,11 @@ explore ──▶ spec ──▶ design ──▶ apply ──▶ verify
 did not write — that independence is the whole point. Delegation keeps the main thread as a
 conversation, not a transcript.
 
-**What was collapsed and why:** `init` folded into `explore` (detection is cacheable, it does not
-deserve its own round trip). `propose` and `tasks` folded into `spec` (three round trips for one
-act of planning). `archive` folded into `verify` (closing is the tail of validating). That is 5
-round trips instead of 10, with delegation fully intact.
+**Why these five and not more:** each round trip costs wall-clock time and re-reads the same
+artifacts, so a phase earns its own trip only when it produces something the next phase genuinely
+cannot. Project detection is cacheable, so it rides along with `explore`. Intent, scope and tasks
+are one act of planning, so they land together in `spec`. Closing is the tail of validating, so
+`verify` does both. What remains is five trips with the delegation fully intact.
 
 **Why `spec` and `design` stay separate:** the user approves the WHAT and it must stay stable. The
 HOW can change during implementation without going back to them. Merging the two means every
@@ -69,8 +70,8 @@ technical change churns an approved contract.
 
 ## Resolved Silently — NEVER Ask The User
 
-These were questions in older versions of this workflow. They are now defaults. Asking them of a
-non-technical user produces an unanswerable question and a stalled session.
+Each of these is a fixed default you apply yourself. Putting any of them to a non-technical user
+produces an unanswerable question and a stalled session.
 
 | Thing | Resolution |
 |---|---|

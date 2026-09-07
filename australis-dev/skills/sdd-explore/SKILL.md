@@ -115,7 +115,7 @@ Then settle on ONE recommended approach. Mention an alternative only if it is ge
 **MANDATORY — the pipeline breaks without it.**
 
 1. Write `.australis/cambios/{slug}/explore.md` with the brief from Step 6. Always.
-2. If Engram is available, additionally save (per **Section C** of `sdd-phase-common.md` — ignore its legacy mode branches, persistence here is unconditional):
+2. If Engram is available, additionally save (per **Section C** of `sdd-phase-common.md`):
 
 | What | `title` / `topic_key` | `type` |
 |---|---|---|
