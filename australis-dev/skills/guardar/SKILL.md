@@ -14,8 +14,9 @@ You handle the mechanics; they see one line of confirmation.
 
 ## Hard Rules
 
-1. **Never commit to `main` or `master`.** If that is the current branch, create `feat/<slug>`
-   first and say so in one line.
+1. **Never commit to the repository's default branch.** If that is the current branch, create
+   `feat/<slug>` first and say so in one line. Resolve which branch is protected per
+   `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md` — it is not always `main`.
 2. **Conventional commits, always.** The subject line is in English and follows the format below —
    it is a technical artifact, not user-facing copy.
 3. **Never** use `git add -A` blindly. Stage what belongs to this unit of work.
@@ -57,7 +58,7 @@ splitting rules.
 
 ## Flow
 
-1. Check the branch. Move off `main` if needed.
+1. Check the branch. Move off the protected branch if needed.
 2. `git status --short` and `git diff --stat` to see what is there.
 3. Group the changes into units of work.
 4. For each unit: stage its files, write the conventional commit, commit.

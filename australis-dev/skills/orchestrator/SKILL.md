@@ -110,12 +110,26 @@ Engram topic keys, when Engram is alive, mirror this: `sdd/{change-name}/{artifa
 
 ## Branch Discipline (MANDATORY)
 
-**Never write code on `main`.** Before launching `apply`:
+**Never write code on the repository's default branch.** Before launching `apply`:
 
-1. Check the current branch.
-2. If on `main` (or `master`), create and switch to `feat/<slug>` — where `<slug>` is the change
-   name, lowercase, hyphenated.
-3. Tell the user in one line: *"Trabajo en la rama `feat/<slug>` para no tocar `main`."*
+1. Resolve the protected branch (see below) and the current branch.
+2. If they are the same, create and switch to `feat/<slug>` — `<slug>` is the change name,
+   lowercase, hyphenated, no accents.
+3. Tell the user in one line: *"Trabajo en la rama `feat/<slug>` para no tocar `<protegida>`."*
+
+### Which branch is protected
+
+Do not assume it is called `main`. Resolve the repository's real default branch, in this order:
+
+```bash
+git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null   # -> "origin/xxx"; strip "origin/"
+git config --get init.defaultBranch                             # the user's configured default
+```
+
+If neither answers, treat these names as protected when they exist: `main`, `master`, `develop`,
+`trunk`. Teams really do use `develop` or `trunk` as their trunk, and a guard that only knows
+`main` silently lets the agent commit straight onto it.
+
 
 If the project is not a git repo, offer to run `git init` once. If they decline, continue without
 git and do not mention it again.

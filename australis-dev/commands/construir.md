@@ -10,8 +10,9 @@ tell the user *"Todavía no acordamos qué construir"* and run `/nuevo` instead.
 
 WORKFLOW:
 
-1. **Branch discipline first.** If on `main` or `master`, create and switch to `feat/<slug>`.
-   Say it in one line. Never write code on `main`.
+1. **Branch discipline first.** Resolve the repository's protected branch per the orchestrator
+   skill — it is not always `main`. If the current branch is that one, create and switch to
+   `feat/<slug>` and say it in one line.
 2. Delegate to the `sdd-design` sub-agent (model: `opus`). Do not show the user a checkpoint —
    design is internal.
 3. Delegate to the `sdd-apply` sub-agent (model: `sonnet`). If tasks are already partly marked
@@ -31,6 +32,7 @@ CONTEXT:
 - Working directory: !`pwd`
 - Current project: !`basename "$(pwd)"`
 - Current branch: !`git branch --show-current 2>/dev/null || echo "(sin git)"`
+- Protected branch: !`b=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null); echo "${b#origin/}" | grep . || git config --get init.defaultBranch || echo "main"`
 - Change: $ARGUMENTS
 
 If no change was named and there is exactly one folder under `.australis/cambios/`, use it.

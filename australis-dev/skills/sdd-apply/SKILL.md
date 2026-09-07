@@ -28,14 +28,14 @@ You write the code. The pipeline is **explore → spec → design → apply → 
 
 ## Branch Discipline — check this FIRST
 
-**Never write code on `main` or `master`.**
+**Never write code on the repository's default branch.** It is not always called `main` — resolve it with `git symbolic-ref --short refs/remotes/origin/HEAD` (strip the `origin/` prefix), else `git config --get init.defaultBranch`, else treat `main`, `master`, `develop` and `trunk` as protected.
 
 Before reading anything else, run `git rev-parse --abbrev-ref HEAD`.
 
 | Result | What you do |
 |---|---|
 | A feature branch (e.g. `feat/{change-name}`) | Continue. |
-| `main` or `master` | **STOP. Write nothing.** Return `status: blocked` with `executive_summary`: *"Estoy parado en la rama principal y no escribo código ahí. Hay que crear la rama del cambio primero."* Creating the branch is the orchestrator's job, not yours. |
+| The protected branch | **STOP. Write nothing.** Return `status: blocked` with `executive_summary`: *"Estoy parado en la rama principal y no escribo código ahí. Hay que crear la rama del cambio primero."* Creating the branch is the orchestrator's job, not yours. |
 | Not a git repository | Continue. Do not run `git init`, do not mention it. |
 
 This check happens once, before Step 1, and it is not negotiable.

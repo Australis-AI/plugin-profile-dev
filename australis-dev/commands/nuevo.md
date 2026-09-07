@@ -22,6 +22,7 @@ CONTEXT:
 - Working directory: !`pwd`
 - Current project: !`basename "$(pwd)"`
 - Current branch: !`git branch --show-current 2>/dev/null || echo "(sin git)"`
+- Protected branch: !`b=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null); echo "${b#origin/}" | grep . || git config --get init.defaultBranch || echo "main"`
 - Change name: $ARGUMENTS
 
 If no change name was given, ask for one in plain Spanish — "¿Cómo le decimos a esto?" — and

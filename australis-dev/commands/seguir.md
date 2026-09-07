@@ -32,5 +32,6 @@ CONTEXT:
 - Working directory: !`pwd`
 - Current project: !`basename "$(pwd)"`
 - Current branch: !`git branch --show-current 2>/dev/null || echo "(sin git)"`
+- Protected branch: !`b=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null); echo "${b#origin/}" | grep . || git config --get init.defaultBranch || echo "main"`
 - Changes on disk: !`ls -1 .australis/cambios 2>/dev/null || echo "(ninguno)"`
 - Filter: $ARGUMENTS
