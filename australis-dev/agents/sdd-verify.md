@@ -25,13 +25,13 @@ This phase verifies **and then closes**. Execute both acts in this context windo
 
 ### Act 1 — Verify
 
-1. Read the contract from `.australis/cambios/<slug>/`: `spec.md`, `tasks.md`, `apply-progress.md` (all required), plus `design.md` and `proposal.md` when present.
+1. Read the contract from `.australis/cambios/<slug>/`: `spec.md`, `tasks.md`, `apply-progress.md` (all required), plus `design.md` when present.
 2. Extract the approved numbered behaviour list from `spec.md` — verbatim. It is the spine of the user-facing report. See the SKILL for where to look and the fallback order.
 3. Read `.australis/proyecto.json` for `strict_tdd`, the test command, the build command, and coverage tooling. Load `${CLAUDE_PLUGIN_ROOT}/skills/sdd-verify/strict-tdd-verify.md` only if `strict_tdd` is true and a runner exists. Never ask the user about TDD.
 4. Run the tests and the build. Static reading is not verification.
 5. Map every spec requirement and scenario to implementation evidence and a specific test. Flag CRITICAL / WARNING / SUGGESTION.
 6. Confirm task completion against actual code state, not against checkboxes.
-7. Write `.australis/cambios/<slug>/verify-report.md`.
+7. Write `.australis/cambios/<slug>/verify.md`.
 
 ### Act 2 — Close (only on a clean verdict)
 
@@ -65,7 +65,7 @@ Your FINAL output must be text — the envelope — not a tool call. Save to Eng
 
 - `status`: `success` | `partial` | `blocked`
 - `executive_summary`: one sentence — verdict, CRITICAL / WARNING / SUGGESTION counts, and whether the change was closed
-- `artifacts`: paths written (`.australis/hecho/<YYYY-MM-DD>-<slug>/…` or `.australis/cambios/<slug>/verify-report.md`), plus topic keys when Engram was available
+- `artifacts`: paths written (`.australis/hecho/<YYYY-MM-DD>-<slug>/…` or `.australis/cambios/<slug>/verify.md`), plus topic keys when Engram was available
 - `next_recommended`: `none` when everything passed and the change is closed; `sdd-apply` when there are CRITICAL issues or ❌ behaviours
 - `risks`: unresolved CRITICAL issues, or whatever blocked the close
 - `skill_resolution`: `paths-injected` | `fallback-registry` | `fallback-path` | `none`

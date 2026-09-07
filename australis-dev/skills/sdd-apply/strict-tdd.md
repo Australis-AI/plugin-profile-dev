@@ -1,7 +1,14 @@
 # Strict TDD Module — Apply Phase
 
-> **This module is loaded ONLY when Strict TDD Mode is enabled AND a test runner is available.**
-> If you are reading this, the orchestrator already verified both conditions. Follow every instruction.
+> **Activation is automatic and silent.** This module applies only when `strict_tdd` is `true` in
+> `.australis/proyecto.json` — the flag `explore` auto-derives from "the project already has a
+> working test runner" — AND `commands.test` in that same file is not `null`. Never ask the user
+> whether TDD is in play; never announce which mode you are in. If you are reading this, both
+> conditions already held. Follow every instruction below.
+
+This module **replaces Step 6** of `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/SKILL.md`. Everything
+else in that skill — branch discipline, reading the contract, merging previous progress, marking
+`[x]`, writing `apply-progress.md`, the return envelope — still applies unchanged.
 
 ## TDD Philosophy
 
@@ -88,7 +95,7 @@ FOR EACH TASK:
 
 ## Choosing Test Layer
 
-Based on the testing capabilities cached in Engram (`sdd/{project}/testing-capabilities`), choose the appropriate test layer for each task:
+Read `test_runner.layers` from `.australis/proyecto.json` — `explore` cached which layers this project actually has (`unit`, `integration`, `e2e`). A layer marked `false`, or an absent `test_runner` block, means the layer is unavailable. Then choose the layer per task:
 
 ```
 Determine test layer by WHAT the task does:
@@ -115,13 +122,14 @@ Determine test layer by WHAT the task does:
 
 ## Test Execution
 
-Detect the test runner from the cached testing capabilities:
+The test command is already resolved. Do not re-detect it.
 
 ```
-Read test command from:
-├── Cached capabilities → test_runner.command (fastest — already detected)
-├── openspec/config.yaml → rules.apply.test_command (override)
-└── Fallback: detect from package.json/pyproject.toml/go.mod
+Read the test command from:
+├── `.australis/proyecto.json` → commands.test        (the only source)
+├── The orchestrator's prompt, when it stated one     (agrees with the above)
+└── A `null` there means the project has no test runner
+    └── which means Strict TDD is NOT active and you should not be in this module
 
 When executing tests during TDD:
 ├── Run ONLY the relevant test file, not the entire suite
@@ -175,9 +183,9 @@ BEFORE touching production code:
     └── Implement new behavior → GREEN
 ```
 
-## Return Summary Extension
+## Progress Report Extension
 
-When Strict TDD Mode is active, your return summary MUST include this section:
+When Strict TDD is active, `.australis/cambios/{change-name}/apply-progress.md` MUST include these two sections. `verify` reads them from that file — a missing evidence table is flagged CRITICAL:
 
 ```markdown
 ### TDD Cycle Evidence
@@ -357,7 +365,7 @@ expect(screen.getByRole("button")).toBeDisabled();
 - NEVER write trivial assertions (see Banned Assertion Patterns above) — they are WORSE than no test
 - ALWAYS verify that every assertion CALLS production code and asserts a SPECIFIC expected value
 - ALWAYS run the Safety Net before modifying existing files — protect what already works
-- ALWAYS report the TDD Cycle Evidence table — the verify phase will check it
+- ALWAYS write the TDD Cycle Evidence table into `apply-progress.md` — `verify` reads it there and flags a missing one as CRITICAL
 - If a test runner execution fails for infrastructure reasons (not test failures), report as "Blocked" and continue to next task
 - Prefer pure functions — but don't force it where it doesn't fit (e.g., React components with state)
 - For refactoring tasks, ALWAYS write approval tests before touching code

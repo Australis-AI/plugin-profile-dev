@@ -1,6 +1,6 @@
 ---
 name: judgment-day
-description: "Trigger: judgment day, dual review, adversarial review, juzgar. Run blind dual review, fix confirmed issues, then re-judge."
+description: "Revisión adversarial: dos revisores ciegos miran el mismo código, se contrastan, se arregla lo confirmado y se vuelve a revisar. Trigger: juzgar, que lo juzguen, revisión doble, revisá esto en serio."
 license: Apache-2.0
 metadata:
   author: australis-ai

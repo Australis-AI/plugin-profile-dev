@@ -1,6 +1,6 @@
 ---
 name: _shared
-description: "Shared SDD references for installed skills. Not invokable."
+description: "Referencias compartidas por las fases del flujo. No se invoca directamente."
 disable-model-invocation: true
 user-invocable: false
 license: MIT

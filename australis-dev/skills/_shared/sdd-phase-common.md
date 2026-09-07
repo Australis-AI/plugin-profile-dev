@@ -39,6 +39,7 @@ shell out to `where engram`.
 .australis/cambios/{change-name}/spec.md    the numbered behaviours the user approved
 .australis/cambios/{change-name}/tasks.md
 .australis/cambios/{change-name}/design.md
+.australis/cambios/{change-name}/apply-progress.md
 .australis/cambios/{change-name}/verify.md
 ```
 

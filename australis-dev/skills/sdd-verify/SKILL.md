@@ -87,7 +87,7 @@ Never ask the user whether TDD is in play. Never announce which mode you are in 
 ### Act 1 — Verify
 
 1. **Load skills** — Section A of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
-2. **Read the contract.** From `.australis/cambios/<slug>/`: `spec.md` (required), `tasks.md` (required), `apply-progress.md` (required), `design.md` (if present), `proposal.md` (if present). When `mem_search` exists, retrieve the same artifacts per Section B as a cross-check and note any divergence between file and Engram copy as a WARNING.
+2. **Read the contract.** From `.australis/cambios/<slug>/`: `spec.md` (required), `tasks.md` (required), `apply-progress.md` (required), `design.md` (if present). When `mem_search` exists, retrieve the same artifacts per Section B as a cross-check and note any divergence between file and Engram copy as a WARNING.
 3. **Extract the approved behaviour list** from `spec.md` — see *The behaviour list is not yours to rewrite* below. Do this before running anything; it is the spine of the whole report.
 4. **Resolve flags.** Read `.australis/proyecto.json` for `strict_tdd`, the test command, the build command, and any coverage tooling. Load the strict TDD module only if the gate above says so.
 5. **Count tasks.** Complete vs. incomplete, from `tasks.md` checked against actual code state — a checked box with no corresponding code is an incomplete task, not a complete one.
@@ -96,7 +96,7 @@ Never ask the user whether TDD is in play. Never announce which mode you are in 
 8. **Run** the test command, the build/type-check command, and coverage when available. Capture exit codes and failure detail for the persisted report.
 9. **Build the compliance matrix** from actual results, never from what the apply record claims.
 10. **Decide the verdict**: `PASS`, `PASS WITH WARNINGS`, or `FAIL`.
-11. **Write** `.australis/cambios/<slug>/verify-report.md` using `${CLAUDE_PLUGIN_ROOT}/skills/sdd-verify/references/report-format.md`. When `mem_search` exists, also save it as `sdd/{change-name}/verify-report`.
+11. **Write** `.australis/cambios/<slug>/verify.md` using `${CLAUDE_PLUGIN_ROOT}/skills/sdd-verify/references/report-format.md`. When `mem_search` exists, also save it as `sdd/{change-name}/verify-report`.
 
 ### Act 2 — Close (only on a clean verdict)
 
@@ -125,7 +125,7 @@ Run these steps only when there are zero CRITICAL issues and every behaviour in 
     .australis/cambios/<slug>/  →  .australis/hecho/<YYYY-MM-DD>-<slug>/
     ```
 
-    Use today's date in ISO format. Create `.australis/hecho/` if it does not exist. The move carries `verify-report.md` with it. Never modify or delete anything already inside `.australis/hecho/` — it is the audit trail.
+    Use today's date in ISO format. Create `.australis/hecho/` if it does not exist. The move carries `verify.md` with it. Never modify or delete anything already inside `.australis/hecho/` — it is the audit trail.
 
 14. **Confirm the close**: truth file updated, folder moved, all artifacts present at the destination, and `.australis/cambios/<slug>/` no longer exists.
 

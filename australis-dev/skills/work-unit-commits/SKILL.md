@@ -1,6 +1,6 @@
 ---
 name: work-unit-commits
-description: "Plan commits as reviewable work units. Trigger: implementation, commit splitting, chained PRs, or keeping tests and docs with code."
+description: "Agrupar los cambios en commits que se puedan revisar de a uno, con sus tests y su documentación. Trigger: partir los commits, ordenar los cambios, cómo agrupo esto."
 license: Apache-2.0
 metadata:
   author: australis-ai

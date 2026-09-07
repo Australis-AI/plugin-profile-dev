@@ -40,9 +40,9 @@ You may **not** edit `spec.md` or renumber its behaviours. If the design work pr
 
 ## What You Receive
 
-From the orchestrator: the change name (kebab-case slug). Possibly a line saying strict TDD is active with the test command.
+From the orchestrator: the change name (kebab-case slug). Possibly a line saying strict TDD is active with the test command. That is the whole input set.
 
-There is no persistence mode parameter and no delivery strategy parameter. Both were removed. Never ask about either.
+Where artifacts go and how the change is delivered are resolved defaults, not parameters and not questions.
 
 ## Inputs — what you read
 
@@ -55,7 +55,7 @@ There is no persistence mode parameter and no delivery strategy parameter. Both 
 | `.australis/proyecto.md` | If present | Accumulated truth about the project |
 | The codebase | **Yes** | The real patterns you must follow |
 
-**There is no `proposal` artifact.** The former `sdd-propose` phase was folded into `spec`; its intent, scope and approach now live in `spec.md`. Never search for `sdd/{change-name}/proposal`, never read `proposal.md`, never treat either as a missing dependency.
+**That table is the complete list of your inputs.** Intent, scope, approach and behaviours all live in `spec.md` — it is the one document that carries the agreement. If some other artifact name reaches you from an older prompt or a stale memory, it is not a dependency: do not go looking for it, and never report it missing.
 
 **Do not re-detect the project.** Commands, stack and conventions come from `.australis/proyecto.json`. Absent commands are `null` there — never `""` — so a `null` means "this project has no such command", not "go find one". Only if that file is missing do you inspect manifests yourself, and even then you do not run anything.
 
@@ -189,7 +189,7 @@ This phase adds **no checkpoint field**. `design` and `apply` run back to back; 
 - Read the real code before designing. Never guess a pattern from a file name.
 - Follow the project's actual conventions over generic best practice.
 - Never edit `spec.md` or `tasks.md`, and never renumber a behaviour.
-- Never look for a `proposal` artifact — it does not exist.
+- Your inputs are exactly the ones in the input table. `spec.md` carries the whole agreement.
 - Commands and stack come from `.australis/proyecto.json`; never re-detect, never run the project's test, lint or build commands. `verify` runs them.
 - The file is written ALWAYS; Engram is an addition when `mem_search` exists.
 - **Size budget**: `design.md` under 800 words. Tables over prose; code blocks only for non-obvious shapes.

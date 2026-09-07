@@ -34,8 +34,9 @@ Execute all steps from the skill directly in this context window:
 6. Write `.australis/cambios/{change-name}/design.md`, in English, then persist to Engram when
    available.
 
-There is **no `proposal` artifact**. The former propose phase was folded into `spec`; its intent,
-scope and approach now live in `spec.md`. Never search for `sdd/{change-name}/proposal`.
+Step 1 lists your complete input set. `spec.md` carries the whole agreement — intent, scope and
+behaviours. If another artifact name reaches you from an older prompt or a stale memory, it is not
+a dependency: do not go looking for it, and never report it missing.
 
 Do NOT write tasks — `spec` already wrote `tasks.md`. Do NOT edit `spec.md` or `tasks.md`, and
 never renumber a behaviour. If the design proves a behaviour impossible or a task obsolete, report

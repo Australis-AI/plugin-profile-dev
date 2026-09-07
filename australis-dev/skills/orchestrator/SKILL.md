@@ -97,6 +97,7 @@ Do not mention that file unless they ask.
 │   ├── spec.md              the numbered behaviours the user approved
 │   ├── tasks.md
 │   ├── design.md
+│   ├── apply-progress.md
 │   └── verify.md
 └── hecho/<YYYY-MM-DD>-<slug>/   closed changes
 ```

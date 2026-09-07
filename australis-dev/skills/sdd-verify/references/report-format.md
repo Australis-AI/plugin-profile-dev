@@ -4,7 +4,7 @@ Two audiences, two formats. Never mix them.
 
 - **The user** gets the *Esto anda* checkpoint — Spanish, plain, no technical detail.
 - **The file and the orchestrator** get the technical report, written to
-  `.australis/cambios/<slug>/verify-report.md` (and to Engram as
+  `.australis/cambios/<slug>/verify.md` (and to Engram as
   `sdd/{change-name}/verify-report` when `mem_search` exists).
 
 ---
@@ -165,12 +165,13 @@ Written only when the change was closed, to
 **Requirements preserved untouched**: {N}
 
 ### Artifacts at Destination
-- proposal.md {✅ / ➖ not produced}
+- explore.md {✅ / ➖ not produced}
 - spec.md ✅
+- tasks.md ✅
 - design.md {✅ / ➖ not produced}
 - tasks.md ✅ ({N}/{N} complete)
 - apply-progress.md ✅
-- verify-report.md ✅
+- verify.md ✅
 
 ### Engram
 {topic keys written, or "Engram not available — files are the complete record"}
