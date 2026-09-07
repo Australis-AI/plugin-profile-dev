@@ -197,5 +197,6 @@ This phase adds **no checkpoint field**. `design` and `apply` run back to back; 
 
 ## References
 
-- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` — Sections A (skill loading), B (Engram retrieval), C (persistence), D (return envelope). Its 4-mode language is legacy: files are always written, Engram is an addition.
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` — Sections A (skill loading), B (artifact retrieval), C (persistence), D (return envelope).
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/artifacts-convention.md` — the `.australis/` layout, slug rules, the per-phase read/write table, and the language split.
 - `${CLAUDE_PLUGIN_ROOT}/skills/_shared/engram-convention.md` — Engram artifact naming.
