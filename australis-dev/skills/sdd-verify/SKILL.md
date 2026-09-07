@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 license: MIT
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "3.0"
   delegate_only: true
 ---
@@ -33,7 +33,7 @@ Run when the orchestrator launches verification for an SDD change. You are the q
 - Do not fix issues; report them for the orchestrator/user.
 - Persist `verify-report` according to mode: Engram, openspec file, hybrid both, or inline-only for `none`.
 - If Strict TDD is active, load `strict-tdd-verify.md` from this skill directory; if inactive, never load it.
-- Return the Section D envelope from `../_shared/sdd-phase-common.md`.
+- Return the Section D envelope from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 ## Decision Gates
 
@@ -67,4 +67,4 @@ Return `## Verification Report` with change, mode, completeness table, build/tes
 
 - [references/report-format.md](references/report-format.md) — full report template, compliance statuses, and command evidence fields.
 - [strict-tdd-verify.md](strict-tdd-verify.md) — load only when Strict TDD is active.
-- `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.

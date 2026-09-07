@@ -13,13 +13,13 @@ You are not the orchestrator. Do NOT call the Task tool. Do NOT launch sub-agent
 
 ## Instructions
 
-Read the skill file at `~/.claude/skills/sdd-init/SKILL.md` and follow it exactly.
-Also read shared conventions at `~/.claude/skills/_shared/sdd-phase-common.md`.
+Read the skill file at `${CLAUDE_PLUGIN_ROOT}/skills/sdd-init/SKILL.md` and follow it exactly.
+Also read shared conventions at `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 Execute all steps from the skill directly in this context window:
 1. Detect project tech stack (package.json, go.mod, pyproject.toml, etc.)
 2. Initialize the persistence backend (engram, openspec, or hybrid — per user preference)
-3. Build the skill registry and write `.atl/skill-registry.md`
+3. Build the skill registry and write `.australis/skill-registry.md`
 4. Save project context to the active backend
 
 ## Engram Save (mandatory)
@@ -36,7 +36,7 @@ After completing work, call `mem_save` with:
 Return a structured result with these fields:
 - `status`: `done` | `blocked` | `partial`
 - `executive_summary`: one-sentence description of what was initialized
-- `artifacts`: list of paths or topic_keys written (e.g. `.atl/skill-registry.md`, `sdd-init/{project}`)
+- `artifacts`: list of paths or topic_keys written (e.g. `.australis/skill-registry.md`, `sdd-init/{project}`)
 - `next_recommended`: `sdd-explore` or `sdd-new`
 - `risks`: any warnings about the detected stack or persistence backend
 - `skill_resolution`: `paths-injected` if exact skill paths were provided and loaded, otherwise `none`

@@ -1,9 +1,9 @@
 ---
 name: issue-creation
-description: "Create Gentle AI issues with issue-first checks. Trigger: creating GitHub issues, bug reports, or feature requests."
+description: "Crear issues de GitHub claras y accionables. Trigger: crear un issue, reportar un bug, pedir una funcionalidad, anotar un pendiente."
 license: Apache-2.0
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "1.0"
 ---
 
@@ -21,7 +21,6 @@ Use this skill when:
 1. **Blank issues are disabled** — MUST use a template (bug report or feature request)
 2. **Every issue gets `status:needs-review` automatically** on creation
 3. **A maintainer MUST add `status:approved`** before any PR can be opened
-4. **Questions go to [Discussions](https://github.com/Gentleman-Programming/agent-teams-lite/discussions)**, not issues
 
 ---
 

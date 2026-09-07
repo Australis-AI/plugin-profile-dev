@@ -1,9 +1,9 @@
 ---
 name: branch-pr
-description: "Create Gentle AI pull requests with issue-first checks. Trigger: creating, opening, or preparing PRs for review."
+description: "Crear branches y pull requests con commits convencionales, sin tocar main. Trigger: abrir un PR, preparar una rama, arrancar una funcionalidad nueva, subir cambios."
 license: Apache-2.0
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "2.0"
 ---
 

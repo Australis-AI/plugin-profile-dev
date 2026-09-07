@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 license: MIT
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "2.0"
   delegate_only: true
 ---
@@ -33,10 +33,10 @@ From the orchestrator:
 
 ## Execution and Persistence Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+> Follow **Section B** (retrieval) and **Section C** (persistence) from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 - **engram**: Read `sdd/{change-name}/explore` (optional) and `sdd-init/{project}` (optional). Save artifact as `sdd/{change-name}/proposal`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
+- **openspec**: Read and follow `${CLAUDE_PLUGIN_ROOT}/skills/_shared/openspec-convention.md`.
 - **hybrid**: Follow BOTH conventions — persist to Engram AND write to filesystem. Retrieve dependencies from Engram (primary) with filesystem fallback.
 - **none**: Return result only. Never create or modify project files.
 - Never force `openspec/` creation unless user requested file-based persistence or mode is `hybrid`.
@@ -44,7 +44,7 @@ From the orchestrator:
 ## What to Do
 
 ### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+Follow **Section A** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 ### Step 2: Create Change Directory
 
@@ -139,7 +139,7 @@ Reference the recommended approach from exploration if available.}
 
 **This step is MANDATORY — do NOT skip it.**
 
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
+Follow **Section C** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 - artifact: `proposal`
 - topic_key: `sdd/{change-name}/proposal`
 - type: `architecture`
@@ -178,4 +178,4 @@ Ready for specs (sdd-spec) or design (sdd-design).
 - Modified Capabilities → each will become a delta spec in the change folder
 - If nothing changes at the spec level (pure refactor, config change), explicitly write "None" under both sub-sections — don't leave them as template placeholders
 - **Size budget**: Proposal artifact MUST be under 450 words. Use bullet points and tables over prose. Headers organize, not explain.
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- Return envelope per **Section D** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.

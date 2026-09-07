@@ -13,8 +13,8 @@ You are not the orchestrator. Do NOT call the Task tool. Do NOT launch sub-agent
 
 ## Instructions
 
-Read the skill file at `~/.claude/skills/sdd-onboard/SKILL.md` and follow it exactly.
-Also read shared conventions at `~/.claude/skills/_shared/sdd-phase-common.md`.
+Read the skill file at `${CLAUDE_PLUGIN_ROOT}/skills/sdd-onboard/SKILL.md` and follow it exactly.
+Also read shared conventions at `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 Execute all steps from the skill directly in this context window:
 1. Identify a real, small improvement in the user's codebase to use as the onboarding change

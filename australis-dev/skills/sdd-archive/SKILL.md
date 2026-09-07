@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 license: MIT
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "2.0"
   delegate_only: true
 ---
@@ -32,17 +32,17 @@ From the orchestrator:
 
 ## Execution and Persistence Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+> Follow **Section B** (retrieval) and **Section C** (persistence) from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 - **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/tasks`, `sdd/{change-name}/verify-report` (all required). Record all observation IDs in the archive report for traceability. Save as `sdd/{change-name}/archive-report`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Perform merge and archive folder moves.
+- **openspec**: Read and follow `${CLAUDE_PLUGIN_ROOT}/skills/_shared/openspec-convention.md`. Perform merge and archive folder moves.
 - **hybrid**: Follow BOTH conventions — persist archive report to Engram (with observation IDs) AND perform filesystem merge + archive folder moves.
 - **none**: Return closure summary only. Do not perform archive file operations.
 
 ## What to Do
 
 ### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+Follow **Section A** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 ### Step 2: Sync Delta Specs to Main Specs
 
@@ -109,7 +109,7 @@ Use today's date in ISO format (e.g., `2026-02-16`).
 
 **This step is MANDATORY — do NOT skip it.**
 
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
+Follow **Section C** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 - artifact: `archive-report`
 - topic_key: `sdd/{change-name}/archive-report`
 - type: `architecture`
@@ -154,4 +154,4 @@ Ready for the next change.
 - The archive is an AUDIT TRAIL — never delete or modify archived changes
 - If `openspec/changes/archive/` doesn't exist, create it
 - Apply any `rules.archive` from `openspec/config.yaml`
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- Return envelope per **Section D** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.

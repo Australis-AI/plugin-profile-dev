@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 license: MIT
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "2.0"
   delegate_only: true
 ---
@@ -32,17 +32,17 @@ From the orchestrator:
 
 ## Execution and Persistence Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+> Follow **Section B** (retrieval) and **Section C** (persistence) from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 - **engram**: Read `sdd/{change-name}/proposal` (required). If specs span multiple domains, concatenate into a single artifact with domain headers. Save as `sdd/{change-name}/spec`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
+- **openspec**: Read and follow `${CLAUDE_PLUGIN_ROOT}/skills/_shared/openspec-convention.md`.
 - **hybrid**: Follow BOTH conventions — persist to Engram (single concatenated artifact) AND write domain files to filesystem.
 - **none**: Return result only. Never create or modify project files.
 
 ## What to Do
 
 ### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+Follow **Section A** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 ### Step 2: Identify Affected Domains
 
@@ -180,7 +180,7 @@ The system {MUST/SHALL/SHOULD} {behavior}.
 
 **This step is MANDATORY — do NOT skip it.**
 
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
+Follow **Section C** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 - artifact: `spec`
 - topic_key: `sdd/{change-name}/spec`
 - type: `architecture`
@@ -223,7 +223,7 @@ Ready for design (sdd-design). If design already exists, ready for tasks (sdd-ta
 - If adding new behavior without changing existing behavior → use ADDED, not MODIFIED
 - Apply any `rules.specs` from `openspec/config.yaml`
 - **Size budget**: Spec artifact MUST be under 650 words. Prefer requirement tables over narrative descriptions. Each scenario: 3-5 lines max.
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- Return envelope per **Section D** from `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
 
 ## RFC 2119 Keywords Quick Reference
 
