@@ -161,6 +161,13 @@ Agent tool calls.
 
 ## Sub-Agent Launch Protocol
 
+**Agent names are namespaced.** Installed as a plugin, the phase agents resolve as
+`australis-dev:sdd-explore`, `australis-dev:sdd-spec`, `australis-dev:sdd-design`,
+`australis-dev:sdd-apply`, `australis-dev:sdd-verify` — and the review agents as
+`australis-dev:jd-judge-a`, `australis-dev:jd-judge-b`, `australis-dev:jd-fix-agent`. Use the
+namespaced name. If it does not resolve, list the available agent types and use the one whose
+suffix matches the phase; never silently run the phase inline instead.
+
 Before every Agent call:
 
 1. Resolve the phase key → model alias from the table above. Include `model`.

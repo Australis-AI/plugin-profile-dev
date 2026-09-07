@@ -13,12 +13,12 @@ WORKFLOW:
 1. **Branch discipline first.** Resolve the repository's protected branch per the orchestrator
    skill — it is not always `main`. If the current branch is that one, create and switch to
    `feat/<slug>` and say it in one line.
-2. Delegate to the `sdd-design` sub-agent (model: `opus`). Do not show the user a checkpoint —
+2. Delegate to the `australis-dev:sdd-design` sub-agent (model: `opus`). Do not show the user a checkpoint —
    design is internal.
-3. Delegate to the `sdd-apply` sub-agent (model: `sonnet`). If tasks are already partly marked
+3. Delegate to the `australis-dev:sdd-apply` sub-agent (model: `sonnet`). If tasks are already partly marked
    `[x]`, instruct it to read, merge and write — never overwrite.
    Show one progress line per behaviour as it completes.
-4. Delegate to the `sdd-verify` sub-agent (model: `sonnet`). This one is non-negotiable: it judges
+4. Delegate to the `australis-dev:sdd-verify` sub-agent (model: `sonnet`). This one is non-negotiable: it judges
    code it did not write.
 5. Present **Checkpoint 3 — "Esto anda"**: the same numbered list the user approved, same wording
    and order, with ✅/❌ per item. Then the exact command to try it. Close with *"¿Qué sigue?"* and

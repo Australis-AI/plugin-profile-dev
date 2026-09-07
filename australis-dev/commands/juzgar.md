@@ -11,11 +11,11 @@ a risky refactor, a security-sensitive change, an architectural slice, or a PR b
 WORKFLOW:
 
 1. Establish the target: files, a feature, a PR, or an architecture slice. If unclear, ask once.
-2. Launch `jd-judge-a` and `jd-judge-b` **in parallel, blind** — neither sees the other's findings.
+2. Launch `australis-dev:jd-judge-a` and `australis-dev:jd-judge-b` **in parallel, blind** — neither sees the other's findings.
    Both get identical prompts and identical skill paths. Model: `sonnet`.
 3. Contrast the two verdicts. Only findings both judges raise, or that survive scrutiny, count as
    confirmed.
-4. Launch `jd-fix-agent` (model: `sonnet`) with the confirmed findings only.
+4. Launch `australis-dev:jd-fix-agent` (model: `sonnet`) with the confirmed findings only.
 5. Re-judge the fixes.
 6. Report to the user in plain Spanish: what was found, what was fixed, what is still open.
    Never paste raw judge output or a diff.
