@@ -61,7 +61,7 @@ Use work-unit commits as the foundation for chained PRs:
 
 ## SDD Relationship
 
-When `sdd-tasks` produces a Review Workload Forecast:
+When `sdd-spec` produces a Review Workload Forecast:
 
 - Low risk: keep work-unit commits inside one PR.
 - Medium risk: commit by work unit and monitor changed lines before PR creation.

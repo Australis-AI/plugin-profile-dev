@@ -1,6 +1,7 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "australis-dev",
-  "description": "Australis dev profile — the development capability module for the Australis harness, distributed as a standalone Claude Code plugin.",
+  "description": "La metodología de desarrollo de Australis, empaquetada como plugin de Claude Code.",
   "owner": {
     "name": "Australis AI"
   },
@@ -8,8 +9,12 @@
     {
       "name": "australis-dev",
       "source": "./australis-dev",
-      "description": "Australis development capability module: SDD workflow (agents, commands, skills), PR/commit flow, judgment-day review, and n8n workflow analysis. Enable for dev sessions; disable to hand the harness to a non-dev.",
-      "version": "1.0.0"
+      "description": "La metodología de desarrollo de Australis: entender, acordar, construir y verificar. Cinco fases delegadas, tres puntos de aprobación, y branches gestionadas solas para que nunca escribas en main.",
+      "version": "2.0.0",
+      "author": { "name": "Australis AI" },
+      "license": "MIT",
+      "category": "productivity",
+      "homepage": "https://github.com/Australis-AI/plugin-profile-dev"
     }
   ]
 }

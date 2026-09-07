@@ -1,44 +1,77 @@
-# SDD Phase — Common Protocol
+# Phase — Common Protocol
 
-Boilerplate identical across all SDD phase skills. Sub-agents MUST load this alongside their phase-specific SKILL.md.
+Boilerplate identical across all phase skills. Sub-agents MUST load this alongside their
+phase-specific `SKILL.md`.
 
-Executor boundary: every SDD phase agent is an EXECUTOR, not an orchestrator. Do the phase work yourself. Do NOT launch sub-agents, do NOT call `delegate`/`task`, and do NOT bounce work back unless the phase skill explicitly says to stop and report a blocker.
+**Executor boundary**: every phase agent is an EXECUTOR, not an orchestrator. Do the phase work
+yourself. Do NOT launch sub-agents, do NOT call `delegate`/`task`, and do NOT bounce work back
+unless your phase skill explicitly says to stop and report a blocker.
+
+The five phases are: **explore → spec → design → apply → verify**.
 
 ## A. Skill Loading
 
-1. Check if the orchestrator injected a `## Skills to load before work` block in your launch prompt. If yes, read those exact `SKILL.md` files before task-specific work.
-2. If no skills block was provided, check for `SKILL: Load` instructions. If present, load those exact skill files.
-3. If neither was provided, search for the skill registry as a fallback:
-   a. `mem_search(query: "skill-registry", project: "{project}")` — if found, `mem_get_observation(id)` for full content
-   b. Fallback: read `.australis/skill-registry.md` from the project root if it exists
-   c. From the registry's skills index, match triggers to your task and read the exact listed `SKILL.md` paths.
-4. If no registry exists, proceed with your phase skill only.
+1. Check whether the orchestrator injected a `## Skills to load before work` block in your launch
+   prompt. If yes, read those exact `SKILL.md` files before task-specific work.
+2. If no skills block was provided, check for `SKILL: Load` instructions. If present, load those.
+3. If neither was provided, fall back to the skill registry:
+   a. `mem_search(query: "skill-registry", project: "{project}")` — if found,
+      `mem_get_observation(id)` for the full content
+   b. Otherwise read `.australis/skill-registry.md` from the project root
+   c. Match triggers to your task and read the exact `SKILL.md` paths listed.
+4. If no registry exists, proceed with your phase skill alone.
 
-NOTE: the preferred path is (1) — exact skill paths selected by the orchestrator. Paths (2) and (3) are fallbacks. Searching the registry is SKILL LOADING, not delegation. If `## Skills to load before work` is present, IGNORE redundant `SKILL: Load` instructions.
+The preferred path is (1). Searching the registry is SKILL LOADING, not delegation. If
+`## Skills to load before work` is present, IGNORE redundant `SKILL: Load` instructions.
 
-## B. Artifact Retrieval (Engram Mode)
+## B. Artifact Retrieval
 
-**CRITICAL**: `mem_search` returns 300-char PREVIEWS, not full content. You MUST call `mem_get_observation(id)` for EVERY artifact. **Skipping this produces wrong output.**
+Artifacts live in **two places**. Files are always present. Engram is present only when the
+`mem_search` tool exists in this session — that tool's presence IS the availability check. Never
+shell out to `where engram`.
 
-**Run all searches in parallel** — do NOT search sequentially.
+### Files — always try this first
+
+```
+.australis/proyecto.md                      accumulated project truth
+.australis/proyecto.json                    cached stack, commands, strict_tdd
+.australis/cambios/{change-name}/explore.md
+.australis/cambios/{change-name}/spec.md    the numbered behaviours the user approved
+.australis/cambios/{change-name}/tasks.md
+.australis/cambios/{change-name}/design.md
+.australis/cambios/{change-name}/verify.md
+```
+
+Read the ones your phase declares as inputs. A missing required input is a `blocked` status — say
+which file was missing.
+
+### Engram — when available, for cross-session and post-compaction recovery
+
+**CRITICAL**: `mem_search` returns 300-character PREVIEWS, not full content. You MUST call
+`mem_get_observation(id)` for EVERY artifact. **Skipping this produces wrong output.**
+
+Run all searches in parallel, then all retrievals in parallel:
 
 ```
 mem_search(query: "sdd/{change-name}/{artifact-type}", project: "{project}") → save ID
-```
-
-Then **run all retrievals in parallel**:
-
-```
 mem_get_observation(id: {saved_id}) → full content (REQUIRED)
 ```
 
-Do NOT use search previews as source material.
+Never use a search preview as source material.
+
+If a file and an Engram copy disagree, **the file wins** — it is the one under version control and
+the one the user can read.
 
 ## C. Artifact Persistence
 
-Every phase that produces an artifact MUST persist it. Skipping this BREAKS the pipeline — downstream phases will not find your output.
+Every phase that produces an artifact MUST persist it. Skipping this breaks the pipeline —
+downstream phases will not find your output.
 
-### Engram mode
+**The rule has no modes and is never a user question:**
+
+1. **Write the file. Always.** Under `.australis/`, at the path listed in Section B. Create parent
+   directories as needed.
+2. **Additionally call `mem_save`** — only when the `mem_search` tool exists in this session.
 
 ```
 mem_save(
@@ -51,59 +84,77 @@ mem_save(
 )
 ```
 
-`topic_key` enables upserts — saving again updates, not duplicates.
-`capture_prompt: false` is mandatory for SDD artifacts because they are automated pipeline outputs, not human/proactive memory saves. Set it when the Engram tool schema supports it; if an older schema rejects or does not expose the field, omit it rather than failing.
+`topic_key` enables upserts — saving again updates rather than duplicates. Note that this means
+Engram keeps no revision history; the file's git history is the record.
 
-### OpenSpec mode
+`capture_prompt: false` is mandatory here because these are automated pipeline outputs, not human
+memory saves. If an older Engram schema rejects or does not expose the field, omit it rather than
+failing.
 
-File was already written during the phase's main step. No additional action needed.
-
-### Hybrid mode
-
-Do BOTH: write the file to the filesystem AND call `mem_save` as above.
-
-### None mode
-
-Return result inline only. Do not write any files or call `mem_save`.
+If `mem_save` fails, **do not fail the phase.** The file is written; note it in `risks` and carry on.
 
 ## D. Return Envelope
 
-> **CRITICAL — Response ordering**: Your FINAL output MUST be text (the return envelope), NOT a tool call. If you need to save to Engram (`mem_save`), do it BEFORE your final text response. Do NOT call `mem_session_summary` — that's for top-level agents only. **Why**: When a sub-agent's last action is a tool call, the parent agent receives only the tool result — your text response (the actual analysis) is lost.
+> **CRITICAL — response ordering**: your FINAL output MUST be text (the envelope), NOT a tool call.
+> If you need `mem_save`, call it BEFORE your final text response. Do NOT call
+> `mem_session_summary` — that is for top-level agents only. When a sub-agent's last action is a
+> tool call, the parent receives only the tool result and your analysis is lost.
 
-Every phase MUST return a structured envelope to the orchestrator:
+Every phase MUST return:
 
-- `status`: `success`, `partial`, or `blocked`
-- `executive_summary`: 1-3 sentence summary of what was done
-- `detailed_report`: (optional) full phase output, or omit if already inline
-- `artifacts`: list of artifact keys/paths written
-- `next_recommended`: the next SDD phase to run, or "none"
-- `risks`: risks discovered, or "None"
-- `skill_resolution`: how skills were loaded — `paths-injected` (received exact skill paths from orchestrator), `fallback-registry` (self-loaded paths from registry), `fallback-path` (loaded via SKILL: Load path), or `none` (no skills loaded)
+| Field | Meaning |
+|---|---|
+| `status` | `success`, `partial`, or `blocked` |
+| `executive_summary` | 1–3 sentences on what was done |
+| `artifacts` | Files written, plus Engram topic keys when saved |
+| `next_recommended` | The next phase, or `none` |
+| `risks` | Risks discovered, or `None` |
+| `skill_resolution` | `paths-injected`, `fallback-registry`, `fallback-path`, or `none` |
 
-Example:
+### User-facing checkpoint fields
+
+Three phases additionally carry the text the orchestrator shows the user. These are **Spanish,
+plain, no jargon** — never a spec, a diff, a stack trace, or a file tree.
+
+| Phase | Field | Content |
+|---|---|---|
+| `explore` | `checkpoint_entendi` | 1–5 one-line scope bullets |
+| `explore` | `checkpoint_no_va_a` | 1–4 bullets of what is explicitly out of scope |
+| `spec` | `user_checkpoint` | The numbered behaviour list verbatim, plus one estimate line |
+| `verify` | `user_checkpoint` | That same list, same wording and order, with ✅/❌ per item |
+
+`design` and `apply` have **no** user checkpoint — they run back to back between the spec and
+verify checkpoints. Do not invent one.
+
+### Example
 
 ```markdown
 **Status**: success
-**Summary**: Proposal created for `{change-name}`. Defined scope, approach, and rollback plan.
-**Artifacts**: Engram `sdd/{change-name}/proposal` | `openspec/changes/{change-name}/proposal.md`
-**Next**: sdd-spec or sdd-design
+**Summary**: Spec written for `regar-plantas`. 5 behaviours, 11 tasks.
+**Artifacts**: `.australis/cambios/regar-plantas/spec.md`, `.australis/cambios/regar-plantas/tasks.md` | Engram `sdd/regar-plantas/spec`, `sdd/regar-plantas/tasks`
+**Next**: sdd-design
 **Risks**: None
-**Skill Resolution**: paths-injected — 3 skills (react-19, typescript, tailwind-4)
-(other values: `fallback-registry`, `fallback-path`, or `none — no registry found`)
+**Skill Resolution**: paths-injected — 2 skills
 ```
 
 ## E. Review Workload Guard
 
-SDD must protect reviewer cognitive load, not only generate tasks.
+The workflow protects reviewer cognitive load, not just task generation.
 
-- The default PR review budget is **400 changed lines** (`additions + deletions`).
-- The orchestrator MUST cache a delivery strategy at session start: `ask-on-risk` (default), `auto-chain`, `single-pr`, or `exception-ok`.
-- The orchestrator MUST pass `delivery_strategy` to `sdd-tasks` and the resolved decision to `sdd-apply`.
-- `sdd-tasks` MUST forecast whether the planned work may exceed that budget.
-- The forecast MUST include exact plain-text guard lines: `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, and `400-line budget risk: Low|Medium|High`.
-- If the forecast is high, `sdd-tasks` MUST recommend chained or stacked PRs using deliverable work units.
-- `sdd-apply` MUST NOT start oversized work unless the delivery strategy resolves to chained/stacked PR slices or explicitly accepted `size:exception`.
-- Each chained PR slice must have a clear start, clear finish, autonomous scope, verification, and reasonable rollback.
-- In a Feature Branch Chain, PR #1 targets the feature/tracker branch and later child PRs target the immediate previous PR branch; if GitHub shows previous slices in a child diff, retarget/rebase until the diff is clean.
+- The default review budget is **400 changed lines** (`additions + deletions`).
+- `spec` MUST forecast whether the planned work will exceed it, emitting these exact plain-text
+  lines so downstream phases can grep them:
+  - `400-line budget risk: Low|Medium|High`
+  - `Chained PRs recommended: Yes|No`
+  - `Decision needed before apply: No`
+  - `Chain strategy: stacked-to-main`
+- The last two are **fixed constants**. Earlier versions asked the user to choose a delivery and
+  chain strategy; that question is gone. It is unanswerable for a non-technical user and stalls
+  the session.
+- When the risk is `High`, `apply` implements the next autonomous slice using work-unit commits —
+  clear start, clear finish, verifiable, reversible — rather than the whole change at once.
+- Surface this to the user only as one plain sentence at the spec checkpoint, e.g. *"esto quedó
+  grande, lo hago en dos partes para que se pueda revisar bien"*. Never present a strategy menu.
 
-This guard exists to reduce reviewer burnout and keep implementation delivery safe. Do not treat it as optional process noise.
+See `${CLAUDE_PLUGIN_ROOT}/skills/chained-pr/SKILL.md` and
+`${CLAUDE_PLUGIN_ROOT}/skills/work-unit-commits/SKILL.md`.
