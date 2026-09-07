@@ -18,6 +18,7 @@ RUN THESE CHECKS, in order:
 | Programa de memoria | `engram --version` | `✅ Memoria instalada` | `❌ Falta la memoria → escribí: /preparar memoria` |
 | Memoria conectada | does the `mem_search` tool exist in this session? | `✅ Memoria conectada` | `❌ La memoria no se conectó → cerrá Claude Code, abrilo de nuevo, y escribí /chequeo` |
 | GitHub (opcional) | `gh auth status` | `✅ GitHub` | `⚪ GitHub sin conectar — no hace falta todavía` |
+| Nombres de archivo largos | `git config --global core.longpaths` | `✅ Nombres largos` | `⚪ Puede fallar al instalar cosas si tu usuario de Windows tiene el nombre largo → se arregla con: git config --global core.longpaths true` |
 
 SPECIAL CASES:
 
@@ -41,4 +42,5 @@ CONTEXT:
 - Memory program: !`engram --version 2>/dev/null || echo "FALTA"`
 - GitHub: !`gh auth status 2>&1 | head -1 || echo "sin conectar"`
 - Memory declined earlier: !`test -f "$HOME/.claude/australis/memoria-off" && echo "sí" || echo "no"`
+- Long paths: !`git config --global core.longpaths 2>/dev/null || echo "no seteado"`
 - Plugins: !`claude plugin list 2>/dev/null | head -10 || echo "(no disponible)"`
