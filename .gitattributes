@@ -1,0 +1,7 @@
+# Shell scripts MUST keep LF endings. With CRLF, Git Bash on Windows fails with
+# "bad interpreter: /usr/bin/env bash^M" and the hook silently never runs.
+*.sh text eol=lf
+
+# Markdown and JSON are read, not executed — normalize to LF for clean diffs.
+*.md text eol=lf
+*.json text eol=lf

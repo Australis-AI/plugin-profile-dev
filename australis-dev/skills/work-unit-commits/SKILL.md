@@ -1,9 +1,9 @@
 ---
 name: work-unit-commits
-description: "Plan commits as reviewable work units. Trigger: implementation, commit splitting, chained PRs, or keeping tests and docs with code."
+description: "Agrupar los cambios en commits que se puedan revisar de a uno, con sus tests y su documentación. Trigger: partir los commits, ordenar los cambios, cómo agrupo esto."
 license: Apache-2.0
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "1.0"
 ---
 
@@ -61,7 +61,7 @@ Use work-unit commits as the foundation for chained PRs:
 
 ## SDD Relationship
 
-When `sdd-tasks` produces a Review Workload Forecast:
+When `sdd-spec` produces a Review Workload Forecast:
 
 - Low risk: keep work-unit commits inside one PR.
 - Medium risk: commit by work unit and monitor changed lines before PR creation.

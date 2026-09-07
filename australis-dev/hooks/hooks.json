@@ -1,0 +1,18 @@
+{
+  "description": "Australis dev — warns once per session when persistent memory is installed but not connected",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/memory-check.sh\"",
+            "timeout": 5,
+            "statusMessage": "Revisando la memoria..."
+          }
+        ]
+      }
+    ]
+  }
+}

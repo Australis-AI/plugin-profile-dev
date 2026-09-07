@@ -1,9 +1,9 @@
 ---
 name: chained-pr
-description: "Trigger: PRs over 400 lines, stacked PRs, review slices. Split oversized changes into chained PRs that protect review focus."
+description: "Partir un cambio grande en varios pull requests encadenados, para que se pueda revisar bien. Trigger: esto quedó muy grande, partir el cambio, PRs encadenados, más de 400 líneas."
 license: Apache-2.0
 metadata:
-  author: gentleman-programming
+  author: australis-ai
   version: "1.0"
 ---
 

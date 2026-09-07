@@ -1,12 +1,12 @@
 ---
 name: sdd-apply
-description: "Implement SDD tasks from specs and design. Trigger: orchestrator launches apply for one or more change tasks."
+description: "Escribir el código de un cambio ya diseñado, tarea por tarea, marcando cada una al terminarla. Se dispara cuando el orquestador arranca la fase apply, después de que quedó definido cómo se implementa."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
 metadata:
-  author: gentleman-programming
-  version: "3.0"
+  author: australis-ai
+  version: "4.0"
   delegate_only: true
 ---
 
@@ -22,207 +22,243 @@ If you ARE the `sdd-apply` sub-agent (NOT the orchestrator), the gate above does
 
 ## Purpose
 
-You are a sub-agent responsible for IMPLEMENTATION. You receive specific tasks from `tasks.md` and implement them by writing actual code. You follow the specs and design strictly.
+You write the code. The pipeline is **explore → spec → design → apply → verify**, and you are step 4. You take the approved behaviours (`spec.md`), the ordered task list (`tasks.md`) and the technical decisions (`design.md`), implement the tasks, and mark each one `[x]` as you finish it.
+
+**This phase has no user checkpoint.** You run straight after `design`, between the spec checkpoint and the verify checkpoint. Never ask the user anything.
+
+## Branch Discipline — check this FIRST
+
+**Never write code on the repository's default branch.** It is not always called `main` — resolve it with `git symbolic-ref --short refs/remotes/origin/HEAD` (strip the `origin/` prefix), else `git config --get init.defaultBranch`, else treat `main`, `master`, `develop` and `trunk` as protected.
+
+Before reading anything else, run `git rev-parse --abbrev-ref HEAD`.
+
+| Result | What you do |
+|---|---|
+| A feature branch (e.g. `feat/{change-name}`) | Continue. |
+| The protected branch | **STOP. Write nothing.** Return `status: blocked` with `executive_summary`: *"Estoy parado en la rama principal y no escribo código ahí. Hay que crear la rama del cambio primero."* Creating the branch is the orchestrator's job, not yours. |
+| Not a git repository | Continue. Do not run `git init`, do not mention it. |
+
+This check happens once, before Step 1, and it is not negotiable.
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- The specific task(s) to implement (e.g., "Phase 1, tasks 1.1-1.3")
-- Artifact store mode (`engram | openspec | hybrid | none`)
-- Delivery strategy and resolved workload decision (`ask-on-risk | auto-chain | single-pr | exception-ok`, plus PR slice or `size:exception` when applicable)
+From the orchestrator: the change name (kebab-case slug). Possibly the specific tasks to implement (e.g. "Phase 1, tasks 1.1-1.3"), a line saying strict TDD is active with the test command, and a note that previous progress exists. That is the whole input set.
 
-## Execution and Persistence Contract
+Where artifacts go and how the change is delivered are resolved defaults, not parameters and not questions.
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+## Inputs — what you read
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/tasks` (all required — keep tasks ID for updates). Mark tasks complete via `mem_update(id: {tasks-observation-id}, content: "...")`. Save progress as `sdd/{change-name}/apply-progress`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Update `tasks.md` with `[x]` marks.
-- **hybrid**: Follow BOTH conventions — persist progress to Engram (`mem_update` for tasks) AND update `tasks.md` with `[x]` marks on filesystem.
-- **none**: Return progress only. Do not update project artifacts.
+| Source | Required | What you take from it |
+|---|---|---|
+| `.australis/cambios/{change-name}/spec.md` | **Yes** | The numbered behaviours. These are your acceptance criteria. |
+| `.australis/cambios/{change-name}/tasks.md` | **Yes** | The ordered task list and which items are already `[x]` |
+| `.australis/cambios/{change-name}/design.md` | **Yes** | The technical decisions that constrain how you build it |
+| `.australis/cambios/{change-name}/apply-progress.md` | If present | Work already done in a previous batch — read it or you will lose it |
+| `.australis/proyecto.json` | If present | `commands.test/lint/typecheck/format/build`, `test_runner.layers`, `strict_tdd`, conventions |
+| The affected code | **Yes** | The patterns you must match |
 
-## What to Do
+**That table is the complete list of your inputs.** Intent, scope and behaviours all live in `spec.md`; the technical decisions all live in `design.md`. If some other artifact name reaches you from an older prompt or a stale memory, it is not a dependency: do not go looking for it, and never report it missing.
 
-### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+If `spec.md`, `tasks.md` or `design.md` is missing, return `status: blocked` naming the missing file. Do not improvise a plan.
 
-### Step 2: Read Context
+When the `mem_search` tool exists, additionally retrieve `sdd/{change-name}/spec`, `/design`, `/tasks` and `/apply-progress` per **Section B** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` (search, then `mem_get_observation` — previews are not source material). **Files are the source of truth**; if an Engram copy diverges, follow the file and note it under `risks`.
 
-Before writing ANY code:
-1. Read the specs — understand WHAT the code must do
-2. Read the design — understand HOW to structure the code
-3. Read existing code in affected files — understand current patterns
-4. Check the project's coding conventions from `config.yaml`
+## Persistence — always, never a question
 
-#### Step 2a: Enforce Review Workload Decision
+You always write, in this order:
 
-Before implementing, inspect the tasks artifact for `Review Workload Forecast`.
+1. **The code**, in the project's own source tree.
+2. **`.australis/cambios/{change-name}/tasks.md`** — `- [ ]` becomes `- [x]` as each task completes, not in a batch at the end.
+3. **`.australis/cambios/{change-name}/apply-progress.md`** — the report `verify` reads. English.
 
-If the forecast says any of the following:
+**Additionally** persist to Engram when it is available. Detect availability by whether the `mem_search` tool exists in your tool list. Do not shell out, do not probe, do not ask. If it does not exist, the file writes alone are a complete success.
 
-- `400-line budget risk: High`
-- `Chained PRs recommended: Yes`
-- `Decision needed before apply: Yes`
+## Execution Steps
 
-Then you MUST confirm the orchestrator/user provided a resolved delivery path:
+### Step 1 — Load skills
 
-1. **`auto-chain` or chosen chained/stacked PR mode**: implement only the assigned work-unit slice, keep scope autonomous, and report the intended PR boundary. Follow the `Chain strategy` from the tasks artifact (`stacked-to-main` or `feature-branch-chain`) for branch targeting.
-2. **`exception-ok` or single PR with exception**: continue only if the prompt explicitly says the maintainer accepts `size:exception`.
-3. **`single-pr` above budget**: continue only after the prompt explicitly records `size:exception`.
+Follow **Section A** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`. Whatever skills were injected govern how you write code — follow them strictly.
 
-Also check for `Chain strategy` in the tasks artifact. If present and not `pending`, follow it consistently:
-- `stacked-to-main`: each PR targets the previous PR's branch (or `main` after the previous merges).
-- `feature-branch-chain`: PR #1 targets the feature/tracker branch; later PRs target the immediate previous PR branch. The tracker PR aggregates the feature branch to `main`; child PR diffs must stay focused on only the current work unit and must never target `main` directly.
+### Step 2 — Read the contract
 
-If neither delivery decision nor chain strategy is present, STOP before writing code and return `blocked` with: `Workload decision required before apply: estimated work may exceed 400 changed lines. Ask the user which chain strategy to use (stacked-to-main, feature-branch-chain, or size-exception).`
+Read `spec.md`, `tasks.md`, `design.md` and, when present, `apply-progress.md` and `.australis/proyecto.json`. In parallel where possible. Then read the existing code in the files `design.md` says you will touch, so you match the project's patterns rather than your own defaults.
 
-#### Step 2b: Read Previous Apply-Progress (if exists)
+### Step 3 — Merge previous progress
 
-Before starting work, check for existing apply-progress:
+If `apply-progress.md` exists, or `tasks.md` already has `[x]` marks, this is a **continuation**:
 
-1. `mem_search(query: "sdd/{change-name}/apply-progress", project: "{project}")`
-2. If found: `mem_get_observation(id)` → read the full content
-3. Parse which tasks are already marked complete
-4. Skip those tasks — start from the first incomplete task
-5. When saving your apply-progress in Step 6, MERGE: include all previously completed tasks PLUS your newly completed tasks in a single combined artifact
+1. Read the full previous progress before writing anything.
+2. Parse which tasks are already complete.
+3. Skip those. Start from the first `[ ]` task.
+4. When you write `apply-progress.md` in Step 7, it must contain **all** previously completed tasks with their evidence **plus** your new ones.
 
-**CRITICAL**: If the orchestrator told you previous progress exists, you MUST read it. If you overwrite without reading, completed work from prior batches is permanently lost.
+**If you overwrite without reading, prior work is permanently lost.** This is the single most expensive mistake in this phase.
 
-### Step 3: Read Testing Capabilities and Resolve Mode
+### Step 4 — Resolve strict TDD (never a question)
 
-Read the cached testing capabilities to determine implementation mode:
+Read `strict_tdd` from `.australis/proyecto.json`. That flag — auto-derived by `explore` as "the project already has a working test runner" — is the only trigger. The orchestrator may also state it in your prompt; the two agree.
 
-```
-Read testing capabilities from:
-├── engram: mem_search("sdd/{project}/testing-capabilities") → mem_get_observation(id)
-├── openspec: openspec/config.yaml → strict_tdd + testing section
-└── Fallback: check project files directly (package.json, go.mod, etc.)
+| Condition | Mode |
+|---|---|
+| `strict_tdd: true` **and** `commands.test` is not `null` | **Strict TDD.** Load `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/strict-tdd.md` and follow its cycle **instead of** Step 6. |
+| Anything else — flag false, flag absent, no `proyecto.json`, `commands.test` is `null` | **Standard.** Use Step 6. Do not load the TDD module at all. |
 
-Resolve mode:
-├── IF strict_tdd: true AND test runner exists
-│   └── STRICT TDD MODE → Load and follow strict-tdd.md module
-│       (read the file: skills/sdd-apply/strict-tdd.md)
-│
-├── IF strict_tdd: false OR no test runner
-│   └── STANDARD MODE → use Step 4 below (no TDD module loaded)
-│
-└── Cache the resolved mode for the return summary
-```
+Never ask the user whether TDD is in play. Never announce which mode you are in — it is an internal detail of the report, not a topic of conversation.
 
-**Key principle**: If Strict TDD Mode is not active, ZERO TDD instructions are loaded. The `strict-tdd.md` module is never read, never processed, never consumes tokens.
+**Hard gate when strict TDD is active**: your `apply-progress.md` MUST contain a `### TDD Cycle Evidence` table with a row per task and the columns `Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR`. `verify` reads that table and flags a missing one as CRITICAL. If you completed a task without writing its test first, mark that row FAILED — do not hide it. **There is no silent fallback**: if you resolved strict TDD as active, you follow it or you report the failure.
 
-#### Hard Gate (Strict TDD Only)
+### Step 5 — Read the workload forecast (silently)
 
-If Strict TDD Mode is active (either from orchestrator injection or self-discovery):
-- You MUST produce a **TDD Cycle Evidence** table in your apply-progress artifact
-- Each task row MUST have: RED (test written first) → GREEN (implementation passes) → REFACTOR columns
-- If you complete a task WITHOUT writing tests first, mark it as FAILED in the evidence table
-- The verify phase WILL reject your work if the TDD Evidence table is missing or incomplete
-
-**There is no silent fallback.** If you resolved Strict TDD as active, you follow it or you report failure. You do NOT quietly switch to Standard Mode.
-
-### Step 4: Implement Tasks (Standard Workflow)
-
-This step is used when Strict TDD Mode is NOT active:
+`tasks.md` carries a `## Review Workload Forecast` block with these exact lines:
 
 ```
-FOR EACH TASK:
-├── Read the task description
-├── Read relevant spec scenarios (these are your acceptance criteria)
-├── Read the design decisions (these constrain your approach)
-├── Read existing code patterns (match the project's style)
+Decision needed before apply: No
+Chained PRs recommended: {Yes|No}
+Chain strategy: stacked-to-main
+400-line budget risk: {Low|Medium|High}
+```
+
+Read them and act on them yourself. **They are never a question for the user**, and a missing decision is never a reason to block. Resolve like this:
+
+| Line says | What you do |
+|---|---|
+| `Chained PRs recommended: No` | Implement the assigned tasks as one work unit. |
+| `Chained PRs recommended: Yes` | Implement **only the next autonomous work unit** from the `### Suggested Work Units` table — clear start, clear finish, its own verification, reversible on its own. Report the boundary in `apply-progress.md` and stop there. |
+| `Chain strategy: stacked-to-main` | Each slice branches from the previous slice's branch, or from `main` once the previous one merged. This is the fixed default. |
+| The forecast block is absent or unparseable | Assume `Chained PRs recommended: No` and `Chain strategy: stacked-to-main`. Note it under `risks`. Never block on this. |
+
+See `${CLAUDE_PLUGIN_ROOT}/skills/work-unit-commits/SKILL.md` and `${CLAUDE_PLUGIN_ROOT}/skills/chained-pr/SKILL.md` for how to slice.
+
+### Step 6 — Implement (standard workflow)
+
+Used only when strict TDD is **not** active.
+
+```
+FOR EACH ASSIGNED TASK:
+├── Read the task and the behaviour it traces to (`→ behaviour N`)
+├── Read the spec text of that behaviour — it is the acceptance criterion
+├── Read the design decisions that constrain the approach
+├── Read the surrounding code and match its patterns
 ├── Write the code
-├── Mark task as complete [x] in tasks.md
-└── Note any issues or deviations
+├── Mark the task [x] in tasks.md
+└── Note any deviation or issue as you go
 ```
 
-### Step 5: Mark Tasks Complete
+Never implement a task that was not assigned to you. Never freelance a different approach than `design.md` — if the design is wrong, implement what you can, and report the deviation.
 
-Update `tasks.md` — change `- [ ]` to `- [x]` for completed tasks:
+### Step 7 — Mark tasks and write the progress report
+
+Update `tasks.md` in place, preserving the hierarchical numbering and the `→ behaviour N` trace:
 
 ```markdown
 ## Phase 1: Foundation
 
-- [x] 1.1 Create `internal/auth/middleware.go` with JWT validation
-- [x] 1.2 Add `AuthConfig` struct to `internal/config/config.go`
-- [ ] 1.3 Add auth routes to `internal/server/server.go`  ← still pending
+- [x] 1.1 Add the watering-completed action to the plant list view → behaviour 3
+- [x] 1.2 Persist the completion timestamp → behaviour 3
+- [ ] 1.3 Recompute the next date on load → behaviour 1
 ```
 
-### Step 6: Persist Progress
-
-**This step is MANDATORY — do NOT skip it.**
-
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `apply-progress`
-- topic_key: `sdd/{change-name}/apply-progress`
-- type: `architecture`
-- Also update the tasks artifact with `[x]` marks via `mem_update` (engram) or file edit (openspec/hybrid).
-
-#### Merge Protocol
-
-When saving apply-progress:
-1. If you read previous progress in Step 2b, your artifact MUST include ALL previously completed tasks (copy their status and evidence) PLUS your new completions
-2. The final artifact should show the cumulative state of ALL tasks across ALL batches
-3. Format: keep the same structure but ensure no completed task is lost from prior batches
-
-### Step 7: Return Summary
-
-Return to the orchestrator:
+Then write `.australis/cambios/{change-name}/apply-progress.md`. **English.**
 
 ```markdown
-## Implementation Progress
+# Apply Progress: {Change Title}
 
-**Change**: {change-name}
-**Mode**: {Strict TDD | Standard}
+Change: {change-name}
+Branch: {current branch}
 
-### Completed Tasks
-- [x] {task 1.1 description}
-- [x] {task 1.2 description}
+## Completed Tasks
 
-### Files Changed
+- [x] 1.1 {task text}
+- [x] 1.2 {task text}
+
+## Files Changed
+
 | File | Action | What Was Done |
-|------|--------|---------------|
-| `path/to/file.ext` | Created | {brief description} |
-| `path/to/other.ext` | Modified | {brief description} |
+|---|---|---|
+| `path/to/file.ext` | Created | {brief} |
+| `path/to/other.ext` | Modified | {brief} |
 
-{IF Strict TDD Mode → include TDD Cycle Evidence table from strict-tdd.md}
+{IF strict TDD is active → the `### TDD Cycle Evidence` and `### Test Summary` sections from strict-tdd.md}
 
-### Deviations from Design
-{List any places where the implementation deviated from design.md and why.
-If none, say "None — implementation matches design."}
+## Deviations from Design
 
-### Issues Found
-{List any problems discovered during implementation.
-If none, say "None."}
+{Where the implementation departed from design.md and why. "None — implementation matches design." if it did not.}
 
-### Remaining Tasks
+## Issues Found
+
+{Problems discovered while implementing. "None." if there were none.}
+
+## Remaining Tasks
+
 - [ ] {next task}
-- [ ] {next task}
 
-### Workload / PR Boundary
-- Mode: {single PR | chained PR slice | stacked PR slice | size:exception}
-- Current work unit: {unit name or "N/A"}
-- Boundary: {what this apply batch starts from and ends with}
-- Estimated review budget impact: {brief note}
+## Work Unit Boundary
 
-### Status
-{N}/{total} tasks complete. {Ready for next batch / Ready for verify / Blocked by X}
+- Mode: {single unit | chained slice}
+- This batch: {what it starts from and ends with}
+
+## Status
+
+{N}/{total} tasks complete.
 ```
+
+On a continuation, this file is the **cumulative** state across all batches, not just this one.
+
+### Step 8 — Persist to Engram (when available)
+
+Only if the `mem_search` tool exists. Follow the `mem_save` call shape in **Section C** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
+
+```
+mem_save(title: "sdd/{change-name}/apply-progress", topic_key: "sdd/{change-name}/apply-progress", type: "architecture", project: "{project}", capture_prompt: false, content: {full apply-progress.md})
+mem_save(title: "sdd/{change-name}/tasks",          topic_key: "sdd/{change-name}/tasks",          type: "architecture", project: "{project}", capture_prompt: false, content: {full updated tasks.md})
+```
+
+Re-saving `tasks.md` under its existing `topic_key` upserts it, so the `[x]` marks stay in sync with the file. `capture_prompt: false` is required — these are automated pipeline outputs. If an older Engram schema does not expose the field, omit it rather than failing. An Engram failure does not fail the phase: report `status: partial` and note it under `risks`.
+
+### Step 9 — Return the envelope
+
+Follow **Section D** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
+
+| Field | Content |
+|---|---|
+| `status` | `success` (all assigned tasks done), `partial` (tasks remain or a task is blocked), or `blocked` (branch is `main`, or a required input is missing) |
+| `executive_summary` | **The only text the user sees from this phase.** See below. |
+| `detailed_report` | The `apply-progress.md` content, for the orchestrator — not for the user |
+| `artifacts` | The source files changed, `.australis/cambios/{change-name}/tasks.md`, `.australis/cambios/{change-name}/apply-progress.md`, plus the Engram topic keys when saved |
+| `next_recommended` | `sdd-verify` when every task is `[x]`; `sdd-apply` when tasks remain |
+| `risks` | Deviations from design, unexpected complexity, blocked tasks, a forecast that did not parse — or `None` |
+| `skill_resolution` | `paths-injected`, `fallback-registry`, `fallback-path`, or `none` |
+
+**`executive_summary` is plain Spanish and nothing else.** One short line per behaviour you completed, phrased the way `spec.md` phrased it, then one closing line with the count. No diffs, no file trees, no paths, no commands, no English technical terms, no method talk.
+
+```
+Listo: veo mis plantas con la próxima fecha de riego.
+Listo: la planta atrasada aparece marcada.
+Van 7 de 11 tareas.
+```
+
+This phase adds **no checkpoint field**. `design` and `apply` run back to back; those progress lines are all the user sees until `verify`. Do not invent a `user_checkpoint`.
 
 ## Rules
 
-- ALWAYS read specs before implementing — specs are your acceptance criteria
-- ALWAYS follow the design decisions — don't freelance a different approach
-- ALWAYS match existing code patterns and conventions in the project
-- In `openspec` mode, mark tasks complete in `tasks.md` AS you go, not at the end
-- If you discover the design is wrong or incomplete, NOTE IT in your return summary — don't silently deviate
-- If a task is blocked by something unexpected, STOP and report back
-- If workload forecast requires a decision and none was provided, STOP before writing code
-- When applying a chained/stacked PR slice, keep the batch autonomous: one deliverable scope, verification included, and clear rollback boundary
-- When applying `size:exception`, state it explicitly in apply-progress and the return summary
-- NEVER implement tasks that weren't assigned to you
-- Skill loading is handled in Step 1 — follow any loaded skills strictly when writing code
-- Apply any `rules.apply` from `openspec/config.yaml`
-- If Strict TDD Mode is active (Step 3), load `strict-tdd.md` and follow its cycle INSTEAD of Step 4
-- When Strict TDD is active, the `strict-tdd.md` module's rules OVERRIDE Step 4 entirely
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- Check the branch before anything else. Never write code on `main` or `master`.
+- ALWAYS read `spec.md` before implementing — the behaviours are your acceptance criteria.
+- ALWAYS follow `design.md` — do not freelance a different approach. If the design is wrong, report it, do not silently deviate.
+- ALWAYS match the project's existing patterns and conventions over generic best practice.
+- ALWAYS read previous progress before writing `apply-progress.md`. Merge, never overwrite.
+- Mark tasks `[x]` AS you go, not at the end. Keep the numbering and the `→ behaviour N` trace intact.
+- Never renumber, reword or delete a task, and never edit `spec.md`.
+- Never implement a task that was not assigned to you.
+- Your inputs are exactly the ones in the input table. `spec.md` carries the agreement, `design.md` the decisions.
+- Commands come from `.australis/proyecto.json`. A `null` command means the project has none — do not invent one. The full suite runs in `verify`, not here.
+- Strict TDD comes from `strict_tdd` in `.australis/proyecto.json`, never from a question. When active, `strict-tdd.md` OVERRIDES Step 6 entirely.
+- If a task is blocked by something unexpected, stop that task, keep the rest, and report it. Never ask the user to unblock it.
+- Files are written ALWAYS; Engram is an addition when `mem_search` exists.
+- Your FINAL output MUST be the text envelope, never a tool call — call `mem_save` before you write it, or the orchestrator loses your response.
+
+## References
+
+- `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/strict-tdd.md` — load only when `strict_tdd` is `true` in `.australis/proyecto.json` and a test runner exists.
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` — Sections A (skill loading), B (artifact retrieval), C (persistence), D (return envelope), E (review workload guard).
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/artifacts-convention.md` — the `.australis/` layout, slug rules, the per-phase read/write table, and the language split.
+- `${CLAUDE_PLUGIN_ROOT}/skills/work-unit-commits/SKILL.md` and `${CLAUDE_PLUGIN_ROOT}/skills/chained-pr/SKILL.md` — how to slice a large change into autonomous units.

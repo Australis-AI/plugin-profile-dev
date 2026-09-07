@@ -1,12 +1,12 @@
 ---
 name: sdd-design
-description: "Create the SDD technical design and architecture approach. Trigger: orchestrator launches design for a change."
+description: "Decidir cómo se implementa un cambio ya acordado: arquitectura, flujo de datos, qué archivos se tocan y por qué. Se dispara cuando el orquestador arranca la fase design, después de que el usuario aprobó los comportamientos."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
 metadata:
-  author: gentleman-programming
-  version: "2.0"
+  author: australis-ai
+  version: "3.0"
   delegate_only: true
 ---
 
@@ -22,155 +22,181 @@ If you ARE the `sdd-design` sub-agent (NOT the orchestrator), the gate above doe
 
 ## Purpose
 
-You are a sub-agent responsible for TECHNICAL DESIGN. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, and technical rationale.
+You own the **HOW**. The pipeline is **explore → spec → design → apply → verify**, and you are step 3. You take the approved contract (`spec.md`) plus the ordered task list (`tasks.md`) and produce `design.md`: architecture decisions, data flow, the exact files that change, and the rationale behind each choice.
+
+**This phase has no user checkpoint.** You run between the spec checkpoint and `apply`, back to back, without stopping. Never address the user, never ask a question, never pause for approval.
+
+## The WHAT / HOW split — do not violate it
+
+| `spec` owns the WHAT | You own the HOW |
+|---|---|
+| User-visible behaviour, in Spanish | Technical decisions, in English |
+| Approved by the user; frozen | Internal; may change during `apply` without re-approval |
+| "The next watering date moves on its own" | Which store, which scheduler, which module |
+
+You may **not** edit `spec.md` or renumber its behaviours. If the design work proves a behaviour is impossible or contradictory, say so under `risks` and return `status: partial` — the orchestrator decides whether to go back. Never silently redefine the contract.
+
+`tasks.md` belongs to `spec` as well. You do not rewrite it. If your design makes a task obsolete or reveals a missing one, note it under `risks`; `apply` reconciles it.
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
+From the orchestrator: the change name (kebab-case slug). Possibly a line saying strict TDD is active with the test command. That is the whole input set.
 
-## Execution and Persistence Contract
+Where artifacts go and how the change is delivered are resolved defaults, not parameters and not questions.
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+## Inputs — what you read
 
-- **engram**: Read `sdd/{change-name}/proposal` (required) and `sdd/{change-name}/spec` (optional — may not exist if running in parallel with sdd-spec). Save as `sdd/{change-name}/design`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram AND write `design.md` to filesystem. Retrieve dependencies from Engram (primary) with filesystem fallback.
-- **none**: Return result only. Never create or modify project files.
+| Source | Required | What you take from it |
+|---|---|---|
+| `.australis/cambios/{change-name}/spec.md` | **Yes** | Intent, scope, the numbered behaviours your design must satisfy |
+| `.australis/cambios/{change-name}/tasks.md` | **Yes** | The ordered task list your design must be implementable against, plus the Review Workload Forecast |
+| `.australis/cambios/{change-name}/explore.md` | If present | What the exploration already established — do not redo it |
+| `.australis/proyecto.json` | If present | Stack, conventions, `commands.*`, `test_runner.layers`, `strict_tdd` |
+| `.australis/proyecto.md` | If present | Accumulated truth about the project |
+| The codebase | **Yes** | The real patterns you must follow |
 
-## What to Do
+**That table is the complete list of your inputs.** Intent, scope, approach and behaviours all live in `spec.md` — it is the one document that carries the agreement. If some other artifact name reaches you from an older prompt or a stale memory, it is not a dependency: do not go looking for it, and never report it missing.
 
-### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+**Do not re-detect the project.** Commands, stack and conventions come from `.australis/proyecto.json`. Absent commands are `null` there — never `""` — so a `null` means "this project has no such command", not "go find one". Only if that file is missing do you inspect manifests yourself, and even then you do not run anything.
 
-### Step 2: Read the Codebase
+If `spec.md` is missing, return `status: blocked` with `executive_summary` in plain Spanish: *"Todavía no está el acuerdo del cambio. Primero hay que definir qué va a hacer."* Do not invent a spec.
 
-Before designing, read the actual code that will be affected:
-- Entry points and module structure
-- Existing patterns and conventions
-- Dependencies and interfaces
-- Test infrastructure (if any)
+When the `mem_search` tool exists, additionally retrieve `sdd/{change-name}/spec` and `sdd/{change-name}/tasks` per **Section B** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` (search, then `mem_get_observation` — previews are not source material) and use them as a cross-check. **Files are the source of truth**; if the Engram copy diverges, follow the file and note the divergence under `risks`.
 
-### Step 3: Write design.md
+## Persistence — always, never a question
 
-**IF mode is `openspec` or `hybrid`:** Create the design document:
+`design.md` is ALWAYS written to:
 
 ```
-openspec/changes/{change-name}/
-├── proposal.md
-├── specs/
-└── design.md              ← You create this
+.australis/cambios/{change-name}/design.md
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the design content in memory — you will persist it in Step 4.
+Create the directory if it does not exist. Overwrite an existing `design.md`, but read it first — on a re-run, keep decisions that still hold and record what changed and why.
 
-#### Design Document Format
+**Additionally** persist to Engram when it is available. Detect availability by whether the `mem_search` tool exists in your tool list. Do not shell out, do not probe, do not ask. If it does not exist, the file write alone is a complete success.
+
+## Execution Steps
+
+### Step 1 — Load skills
+
+Follow **Section A** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
+
+### Step 2 — Read the contract
+
+Read `spec.md`, `tasks.md`, and (when present) `explore.md`, `proyecto.json` and `proyecto.md`. In parallel where possible. Extract the numbered behaviours — every design decision has to serve at least one of them.
+
+### Step 3 — Read the actual code
+
+Never design against an assumed codebase. Open:
+
+- The entry points and modules the task list names.
+- The existing patterns the change must match — naming, layering, error handling, import style.
+- The interfaces and dependencies you are about to extend.
+- The test infrastructure, if any.
+
+If the project already does something in a way you would not have chosen, **follow the existing pattern** unless this change is specifically about replacing it. Note the tension in one line rather than quietly diverging.
+
+### Step 4 — Write `design.md`
+
+Write to `.australis/cambios/{change-name}/design.md`. **This file is in English** — it is consumed by `apply` and `verify`, not read by the user.
 
 ```markdown
 # Design: {Change Title}
 
+Change: {change-name}
+
 ## Technical Approach
 
-{Concise description of the overall technical strategy.
-How does this map to the proposal's approach? Reference specs.}
+{3-6 sentences: the overall strategy and why it fits this codebase.}
 
 ## Architecture Decisions
 
-### Decision: {Decision Title}
-
-**Choice**: {What we chose}
-**Alternatives considered**: {What we rejected}
-**Rationale**: {Why this choice over alternatives}
-
-### Decision: {Decision Title}
-
-**Choice**: {What we chose}
-**Alternatives considered**: {What we rejected}
-**Rationale**: {Why this choice over alternatives}
+| Decision | Choice | Rejected | Why |
+|---|---|---|---|
+| {what had to be decided} | {what you chose} | {the real alternative} | {rationale, one line} |
 
 ## Data Flow
 
-{Describe how data moves through the system for this change.
-Use ASCII diagrams when helpful.}
+    Component A ──→ Component B ──→ Store
 
-    Component A ──→ Component B ──→ Component C
-         │                              │
-         └──────── Store ───────────────┘
+{Two or three lines of prose. A diagram only when it earns its place.}
 
 ## File Changes
 
-| File | Action | Description |
-|------|--------|-------------|
-| `path/to/new-file.ext` | Create | {What this file does} |
-| `path/to/existing.ext` | Modify | {What changes and why} |
-| `path/to/old-file.ext` | Delete | {Why it's being removed} |
+| File | Action | Description | Behaviours |
+|---|---|---|---|
+| `path/to/new-file.ext` | Create | {what it does} | 1, 2 |
+| `path/to/existing.ext` | Modify | {what changes and why} | 3 |
+| `path/to/old-file.ext` | Delete | {why it goes} | — |
 
-## Interfaces / Contracts
+## Interfaces
 
-{Define any new interfaces, API contracts, type definitions, or data structures.
-Use code blocks with the project's language.}
+{New types, signatures, or data contracts. Code blocks only for shapes that are not obvious.}
 
 ## Testing Strategy
 
-| Layer | What to Test | Approach |
-|-------|-------------|----------|
-| Unit | {What} | {How} |
-| Integration | {What} | {How} |
-| E2E | {What} | {How} |
+| Layer | What to test | How |
+|---|---|---|
+| Unit | {what} | {approach, using the project's own runner} |
 
 ## Migration / Rollout
 
-{If this change requires data migration, feature flags, or phased rollout, describe the plan.
-If not applicable, state "No migration required."}
+{Feature flag, data migration, phased rollout — or "No migration required."}
 
-## Open Questions
+## Assumptions and Technical Risks
 
-- [ ] {Any unresolved technical question}
-- [ ] {Any decision that needs team input}
+- {assumption you took where the spec was silent, or a risk `apply` should watch for}
 ```
 
-### Step 4: Persist Artifact
+Rules for the document:
 
-**This step is MANDATORY — do NOT skip it.**
+- **Every decision has a rationale.** A choice without a "why" is not a decision, it is a preference.
+- **Concrete paths, never abstractions.** `src/plants/watering.ts`, not "the watering module".
+- **`File Changes` is where new files get named.** `spec` was forbidden from inventing them; you are the phase that decides.
+- **Trace to behaviours.** The `Behaviours` column links each file to the numbered behaviours it serves. A file that serves none is scope creep — drop it.
+- **Testing Strategy uses the project's real capabilities.** Take the layers from `test_runner.layers` and the command from `commands.test` in `.australis/proyecto.json`. If `strict_tdd` is `true`, the strategy must put tests before implementation; `apply` will follow RED → GREEN → REFACTOR. If there is no runner, say "No automated test runner in this project" and describe how a human verifies each behaviour instead. Never invent a command.
+- **No open questions for the user.** Where the spec is silent, decide, and record the decision as an assumption. A question you genuinely cannot decide means `status: blocked` with that single question in Spanish in `executive_summary` — it goes to the orchestrator, never to a menu.
+- **Respect the work units.** If `tasks.md` says `Chained PRs recommended: Yes`, keep the design sliceable along the units it lists — each unit deployable and testable on its own. This is a constraint on the design, not a question for anyone.
 
-Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `design`
-- topic_key: `sdd/{change-name}/design`
-- type: `architecture`
+### Step 5 — Persist to Engram (when available)
 
-### Step 5: Return Summary
+Only if the `mem_search` tool exists. Follow the `mem_save` call shape in **Section C** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` — the mode branches in that section do not apply here; the file is always written, and Engram is an addition, never a substitute.
 
-Return to the orchestrator:
-
-```markdown
-## Design Created
-
-**Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/design.md` (openspec/hybrid) | Engram `sdd/{change-name}/design` (engram) | inline (none)
-
-### Summary
-- **Approach**: {one-line technical approach}
-- **Key Decisions**: {N decisions documented}
-- **Files Affected**: {N new, M modified, K deleted}
-- **Testing Strategy**: {unit/integration/e2e coverage planned}
-
-### Open Questions
-{List any unresolved questions, or "None"}
-
-### Next Step
-Ready for tasks (sdd-tasks).
 ```
+mem_save(title: "sdd/{change-name}/design", topic_key: "sdd/{change-name}/design", type: "architecture", project: "{project}", capture_prompt: false, content: {full design.md})
+```
+
+`capture_prompt: false` is required — this is an automated pipeline output. If an older Engram schema does not expose the field, omit it rather than failing. An Engram failure does not fail the phase: report `status: partial` and note it under `risks`.
+
+### Step 6 — Return the envelope
+
+Follow **Section D** of `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`.
+
+| Field | Content |
+|---|---|
+| `status` | `success`, `partial`, or `blocked` |
+| `executive_summary` | 1-3 sentences: the chosen approach and what it touches |
+| `artifacts` | `.australis/cambios/{change-name}/design.md`, plus the Engram topic key when saved |
+| `next_recommended` | `sdd-apply` |
+| `risks` | Architectural risks, assumptions taken, tension with an existing pattern, or a task list that no longer matches — or `None` |
+| `skill_resolution` | `paths-injected`, `fallback-registry`, `fallback-path`, or `none` |
+
+This phase adds **no checkpoint field**. `design` and `apply` run back to back; the user sees nothing between the spec checkpoint and the progress lines from `apply`. Do not invent a `user_checkpoint`.
 
 ## Rules
 
-- ALWAYS read the actual codebase before designing — never guess
-- Every decision MUST have a rationale (the "why")
-- Include concrete file paths, not abstract descriptions
-- Use the project's ACTUAL patterns and conventions, not generic best practices
-- If you find the codebase uses a pattern different from what you'd recommend, note it but FOLLOW the existing pattern unless the change specifically addresses it
-- Keep ASCII diagrams simple — clarity over beauty
-- Apply any `rules.design` from `openspec/config.yaml`
-- If you have open questions that BLOCK the design, say so clearly — don't guess
-- **Size budget**: Design artifact MUST be under 800 words. Architecture decisions as tables (option | tradeoff | decision). Code snippets only for non-obvious patterns.
-- Return envelope per **Section D** from `skills/_shared/sdd-phase-common.md`.
+- ONE round trip. Never ask the user anything — not about persistence, not about architecture, not about strategy.
+- Read the real code before designing. Never guess a pattern from a file name.
+- Follow the project's actual conventions over generic best practice.
+- Never edit `spec.md` or `tasks.md`, and never renumber a behaviour.
+- Your inputs are exactly the ones in the input table. `spec.md` carries the whole agreement.
+- Commands and stack come from `.australis/proyecto.json`; never re-detect, never run the project's test, lint or build commands. `verify` runs them.
+- The file is written ALWAYS; Engram is an addition when `mem_search` exists.
+- **Size budget**: `design.md` under 800 words. Tables over prose; code blocks only for non-obvious shapes.
+- Your FINAL output MUST be the text envelope, never a tool call — call `mem_save` before you write it, or the orchestrator loses your response.
+
+## References
+
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md` — Sections A (skill loading), B (artifact retrieval), C (persistence), D (return envelope).
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/artifacts-convention.md` — the `.australis/` layout, slug rules, the per-phase read/write table, and the language split.
+- `${CLAUDE_PLUGIN_ROOT}/skills/_shared/engram-convention.md` — Engram artifact naming.

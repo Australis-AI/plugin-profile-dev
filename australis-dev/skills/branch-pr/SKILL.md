@@ -1,202 +1,187 @@
 ---
 name: branch-pr
-description: "Create Gentle AI pull requests with issue-first checks. Trigger: creating, opening, or preparing PRs for review."
-license: Apache-2.0
+description: "Manejar ramas y pull requests solo, sin que tengas que saber git y sin tocar nunca main. Trigger: abrir un PR, preparar una rama, arrancar una funcionalidad nueva, subir los cambios."
+license: MIT
 metadata:
-  author: gentleman-programming
-  version: "2.0"
+  author: australis-ai
+  version: "3.0"
 ---
 
-## When to Use
+# Branches and Pull Requests
 
-Use this skill when:
-- Creating a pull request for any change
-- Preparing a branch for submission
-- Helping a contributor open a PR
+You manage branches so the user does not have to. The single most important outcome: **their
+default branch never gets written to directly.** Everything else here is in service of that.
 
----
-
-## Critical Rules
-
-1. **Every PR MUST link an approved issue** — no exceptions
-2. **Every PR MUST have exactly one `type:*` label**
-3. **Automated checks must pass** before merge is possible
-4. **Blank PRs without issue linkage will be blocked** by GitHub Actions
+This applies to **the user's own repository**. Do not assume any particular labels, issue
+templates, CI workflows, or review process exist — most projects have none of that, and demanding
+them blocks the user on approvals that will never come.
 
 ---
 
-## Workflow
+## Hard Rules
 
-```
-1. Verify issue has `status:approved` label
-2. Create branch: type/description (see Branch Naming below)
-3. Implement changes with conventional commits
-4. Run shellcheck on modified scripts
-5. Open PR using the template
-6. Add exactly one type:* label
-7. Wait for automated checks to pass
-```
+1. **Never commit or write code on the repository's default branch.** Branch first, always.
+   Resolve which branch that is — see *Which branch is protected* below. It is not always `main`.
+2. **Never** force-push, never rewrite published history.
+3. **Never** add AI attribution, `Co-Authored-By`, or "generated with" trailers to commits or PRs.
+4. **Never** block on a label, an approval, or a CI check that this repository does not define.
+5. Conventional commits, always.
 
 ---
 
-## Branch Naming
+## Branch Discipline
 
-Branch names MUST match this regex:
+### Step 1 — Which branch is protected
 
-```
-^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)\/[a-z0-9._-]+$
-```
+Do not assume it is called `main`. Resolve the repository's real default branch, in this order:
 
-**Format:** `type/description` — lowercase, no spaces, only `a-z0-9._-` in description.
-
-| Type | Branch pattern | Example |
-|------|---------------|---------|
-| Feature | `feat/<description>` | `feat/user-login` |
-| Bug fix | `fix/<description>` | `fix/zsh-glob-error` |
-| Chore | `chore/<description>` | `chore/update-ci-actions` |
-| Docs | `docs/<description>` | `docs/installation-guide` |
-| Style | `style/<description>` | `style/format-scripts` |
-| Refactor | `refactor/<description>` | `refactor/extract-shared-logic` |
-| Performance | `perf/<description>` | `perf/reduce-startup-time` |
-| Test | `test/<description>` | `test/add-setup-coverage` |
-| Build | `build/<description>` | `build/update-shellcheck` |
-| CI | `ci/<description>` | `ci/add-branch-validation` |
-| Revert | `revert/<description>` | `revert/broken-setup-change` |
-
----
-
-## PR Body Format
-
-The PR template is at `.github/PULL_REQUEST_TEMPLATE.md`. Every PR body MUST contain:
-
-### 1. Linked Issue (REQUIRED)
-
-```markdown
-Closes #<issue-number>
+```bash
+git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null   # -> "origin/xxx"; strip "origin/"
+git config --get init.defaultBranch                             # the user's configured default
 ```
 
-Valid keywords: `Closes #N`, `Fixes #N`, `Resolves #N` (case insensitive).
-The linked issue MUST have the `status:approved` label.
+If neither answers, treat these names as protected when they exist: `main`, `master`, `develop`,
+`trunk`. Teams really do use `develop` or `trunk` as their trunk, and a guard that only knows
+`main` silently lets the agent commit straight onto it.
 
-### 2. PR Type (REQUIRED)
+### Step 2 — Move off it
 
-Check exactly ONE in the template and add the matching label:
-
-| Checkbox | Label to add |
-|----------|-------------|
-| Bug fix | `type:bug` |
-| New feature | `type:feature` |
-| Documentation only | `type:docs` |
-| Code refactoring | `type:refactor` |
-| Maintenance/tooling | `type:chore` |
-| Breaking change | `type:breaking-change` |
-
-### 3. Summary
-
-1-3 bullet points of what the PR does.
-
-### 4. Changes Table
-
-```markdown
-| File | Change |
-|------|--------|
-| `path/to/file` | What changed |
+```bash
+git rev-parse --abbrev-ref HEAD    # where am I?
 ```
 
-### 5. Test Plan
+If the current branch is the protected one:
 
-```markdown
-- [x] Scripts run without errors: `shellcheck scripts/*.sh`
-- [x] Manually tested the affected functionality
-- [x] Skills load correctly in target agent
+```bash
+git checkout -b feat/<slug>
 ```
 
-### 6. Contributor Checklist
+Tell the user in exactly one line, no ceremony, naming the real branch:
 
-All boxes must be checked:
-- Linked an approved issue
-- Added exactly one `type:*` label
-- Ran shellcheck on modified scripts
-- Skills tested in at least one agent
-- Docs updated if behavior changed
-- Conventional commit format
-- No `Co-Authored-By` trailers
+> Trabajo en la rama `feat/nombre-del-cambio` para no tocar `develop`.
 
----
+If they are already on a feature branch, stay on it.
 
-## Automated Checks (all must pass)
+If the folder is not a git repository, offer `git init` once. If they decline, work without git
+and do not bring it up again.
 
-| Check | Job name | What it verifies |
-|-------|----------|-----------------|
-| PR Validation | `Check Issue Reference` | Body contains `Closes/Fixes/Resolves #N` |
-| PR Validation | `Check Issue Has status:approved` | Linked issue has `status:approved` |
-| PR Validation | `Check PR Has type:* Label` | PR has exactly one `type:*` label |
-| CI | `Shellcheck` | Shell scripts pass `shellcheck` |
+### Branch naming
+
+```
+^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)/[a-z0-9._-]+$
+```
+
+`type/description` — lowercase, hyphens, no accents, no spaces.
+
+| Type | When | Example |
+|---|---|---|
+| `feat` | New behaviour | `feat/user-login` |
+| `fix` | Something was broken | `fix/date-off-by-one` |
+| `chore` | Maintenance, deps, config | `chore/update-deps` |
+| `docs` | Documentation only | `docs/installation-guide` |
+| `refactor` | Restructure, no behaviour change | `refactor/extract-shared-logic` |
+| `test` | Tests only | `test/add-signup-coverage` |
+| `perf` | Performance | `perf/reduce-startup-time` |
+| `style` | Formatting only | `style/format-templates` |
+| `build` / `ci` | Build system, pipelines | `ci/add-lint-step` |
+| `revert` | Undo a previous change | `revert/broken-migration` |
+
+Derive the slug from the change name the user gave. Strip accents: `regar-plantas`, not
+`regar-plántas`.
 
 ---
 
 ## Conventional Commits
 
-Commit messages MUST match this regex:
-
 ```
-^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9\._-]+\))?!?: .+
+^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9._-]+\))?!?: .+
 ```
 
-**Format:** `type(scope): description` or `type: description`
+Format: `type(scope): description` or `type: description`. The `!` marks a breaking change.
 
-- `type` — required, one of: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`
-- `(scope)` — optional, lowercase with `a-z0-9._-`
-- `!` — optional, indicates breaking change
-- `description` — required, starts after `: `
+Subject in **English**, imperative, lowercase, no trailing period, under ~72 characters. The
+commit message is a technical artifact — it does not follow the Spanish user-facing copy rule.
 
-Type-to-label mapping:
-
-| Commit type | PR label |
-|-------------|----------|
-| `feat` | `type:feature` |
-| `fix` | `type:bug` |
-| `docs` | `type:docs` |
-| `refactor` | `type:refactor` |
-| `chore` | `type:chore` |
-| `style` | `type:chore` |
-| `perf` | `type:feature` |
-| `test` | `type:chore` |
-| `build` | `type:chore` |
-| `ci` | `type:chore` |
-| `revert` | `type:bug` |
-| `feat!` / `fix!` | `type:breaking-change` |
-
-Examples:
 ```
-feat(scripts): add Codex support to setup.sh
-fix(skills): correct topic key format in sdd-apply
-docs(readme): update multi-model configuration guide
-refactor(skills): extract shared persistence logic
-chore(ci): add shellcheck to PR validation workflow
-perf(scripts): reduce setup.sh execution time
-style(skills): fix markdown formatting
-test(scripts): add setup.sh integration tests
-ci(workflows): add branch name validation
-revert: undo broken setup change
-feat!: redesign skill loading system
+feat(plantas): add watering interval per plant
+fix(storage): persist plant list across restarts
+docs(readme): document the setup steps
+refactor(list): extract due-today filter
+chore(deps): update date library
+feat!: replace local storage with a database
 ```
+
+Report back to the user in **plain Spanish**, describing what was saved in their words — never
+the commit message itself:
+
+> Guardé dos cosas:
+> • La pantalla que lista las plantas
+> • El botón de "Regada" y el cálculo de la próxima fecha
+
+---
+
+## Pull Requests — optional, never forced
+
+A PR only makes sense when the repository has a remote on GitHub and `gh` is authenticated.
+Check before offering. If either is missing, say nothing about PRs — the work is safely committed
+on a branch and that is enough.
+
+When it does apply, ask once:
+
+> ¿Querés que lo suba a GitHub y abra un pull request, o lo dejamos en la rama por ahora?
+
+### PR body
+
+Keep it short and useful. No template file is required.
+
+```markdown
+## Qué cambia
+
+- <one to three bullets, plain language>
+
+## Cómo probarlo
+
+<the exact command or the steps>
+```
+
+If the repository **does** have issue linkage conventions, and an issue exists for this work, add
+`Closes #N`. If no issue exists, **do not create one just to satisfy a convention** — link nothing.
+
+### Optional niceties, only if the repo already uses them
+
+- Labels: add one only if the repository already defines a label taxonomy.
+- Reviewers: request one only if the user names someone.
+- CI: if checks exist, wait and report the result in plain Spanish. If they fail, say what failed
+  and offer to fix it. If no checks exist, do not mention CI.
 
 ---
 
 ## Commands
 
 ```bash
-# Create branch
-git checkout -b feat/my-feature main
+# Branch off the protected branch
+git checkout -b feat/my-feature
 
-# Run shellcheck before pushing
-shellcheck scripts/*.sh
-
-# Push and create PR
+# Push and open a PR (only when gh is authenticated and a remote exists)
 git push -u origin feat/my-feature
-gh pr create --title "feat(scope): description" --body "Closes #N"
+gh pr create --title "feat(scope): description" --body-file <file>
 
-# Add type label to PR
-gh pr edit <pr-number> --add-label "type:feature"
+# Resolve the protected branch
+git symbolic-ref --short refs/remotes/origin/HEAD
+git config --get init.defaultBranch
+
+# Check whether PRs are even possible here
+git remote -v
+gh auth status
 ```
+
+---
+
+## Splitting large changes
+
+If the diff grows past roughly 400 changed lines, review quality drops sharply. See
+`${CLAUDE_PLUGIN_ROOT}/skills/chained-pr/SKILL.md` for how to split it into a reviewable chain,
+and `${CLAUDE_PLUGIN_ROOT}/skills/work-unit-commits/SKILL.md` for how to group commits.
+
+Raise this with the user in plain Spanish — *"esto quedó grande, lo parto en dos para que se pueda
+revisar bien"* — and then just do it. Do not present a strategy menu.

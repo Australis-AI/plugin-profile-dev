@@ -1,223 +1,117 @@
 ---
 name: issue-creation
-description: "Create Gentle AI issues with issue-first checks. Trigger: creating GitHub issues, bug reports, or feature requests."
-license: Apache-2.0
+description: "Anotar pendientes y bugs como issues de GitHub, claros y accionables. Trigger: crear un issue, reportar un bug, anotar un pendiente, esto lo dejamos para después."
+license: MIT
 metadata:
-  author: gentleman-programming
-  version: "1.0"
+  author: australis-ai
+  version: "2.0"
 ---
 
-## When to Use
+# Issues
 
-Use this skill when:
-- Creating a GitHub issue (bug report or feature request)
-- Helping a contributor file an issue
-- Triaging or approving issues as a maintainer
+Issues are how a project remembers what is still pending. For someone who does not program, they
+replace "me acuerdo que había algo del botón".
 
----
-
-## Critical Rules
-
-1. **Blank issues are disabled** — MUST use a template (bug report or feature request)
-2. **Every issue gets `status:needs-review` automatically** on creation
-3. **A maintainer MUST add `status:approved`** before any PR can be opened
-4. **Questions go to [Discussions](https://github.com/Gentleman-Programming/agent-teams-lite/discussions)**, not issues
+This applies to **the user's own repository**. Do not assume it has issue templates, a label
+taxonomy, or an approval workflow. Most do not. **Never block work waiting for an approval or a
+label that this repo does not define** — that is a dead end with no maintainer on the other side.
 
 ---
 
-## Workflow
+## Hard Rules
 
-```
-1. Search existing issues for duplicates
-2. Choose the correct template (Bug Report or Feature Request)
-3. Fill in ALL required fields
-4. Check pre-flight checkboxes
-5. Submit → issue gets status:needs-review automatically
-6. Wait for maintainer to add status:approved
-7. Only then open a PR linking this issue
-```
+1. **Never** require a `status:approved`-style gate before work can start. If the user wants
+   something built, build it.
+2. **Never** create an issue just to satisfy a convention. Issues exist to remember real pending
+   work.
+3. **Never** invent a template file. Write the body directly.
+4. Search for duplicates before creating.
+5. If `gh` is not authenticated or there is no GitHub remote, **do not mention issues at all** —
+   note the pending item in `.australis/proyecto.md` instead.
 
 ---
 
-## Issue Templates
+## When to create one
 
-### Bug Report
+| Situation | Action |
+|---|---|
+| The user says "esto lo dejamos para después" | Offer to note it: *"¿Lo anoto como pendiente para no perderlo?"* |
+| Something broke and is not being fixed now | Create a bug issue |
+| A behaviour was cut from scope at checkpoint 2 | Offer to note it after the build closes |
+| The user asks directly | Create it |
+| The user wants it built now | **Just build it.** No issue needed. |
 
-Template: `.github/ISSUE_TEMPLATE/bug_report.yml`
-Auto-labels: `bug`, `status:needs-review`
+---
 
-#### Required Fields
-
-| Field | Description |
-|-------|-------------|
-| **Pre-flight Checks** | Checkboxes: no duplicate + understands approval workflow |
-| **Bug Description** | Clear description of the bug |
-| **Steps to Reproduce** | Numbered steps to reproduce |
-| **Expected Behavior** | What should have happened |
-| **Actual Behavior** | What happened instead (include errors/logs) |
-| **Operating System** | Dropdown: macOS, Linux variants, Windows, WSL |
-| **Agent / Client** | Dropdown: Claude Code, OpenCode, Gemini CLI, Cursor, Windsurf, Codex, Other |
-| **Shell** | Dropdown: bash, zsh, fish, Other |
-
-#### Optional Fields
-
-| Field | Description |
-|-------|-------------|
-| **Relevant Logs** | Log output (auto-formatted as code block) |
-| **Additional Context** | Screenshots, workarounds, extra info |
-
-#### Example — Bug Report via CLI
+## Before creating
 
 ```bash
-gh issue create --template "bug_report.yml" \
-  --title "fix(scripts): setup.sh fails on zsh with glob error" \
-  --body "
-### Pre-flight Checks
-- [x] I have searched existing issues and this is not a duplicate
-- [x] I understand this issue needs status:approved before a PR can be opened
-
-### Bug Description
-Running setup.sh on zsh throws a glob error when no matching files exist.
-
-### Steps to Reproduce
-1. Clone the repo
-2. Run \`./scripts/setup.sh\` in zsh
-3. See error: \`zsh: no matches found: skills/*\`
-
-### Expected Behavior
-The script should handle missing glob matches gracefully.
-
-### Actual Behavior
-Script crashes with glob error.
-
-### Operating System
-macOS
-
-### Agent / Client
-Claude Code
-
-### Shell
-zsh
-
-### Relevant Logs
-\`\`\`
-zsh: no matches found: skills/*
-\`\`\`
-"
+gh issue list --search "<keywords>" --state all --limit 10
 ```
+
+If a close match exists, show it and ask whether to add to that one instead.
 
 ---
 
-### Feature Request
+## Body format
 
-Template: `.github/ISSUE_TEMPLATE/feature_request.yml`
-Auto-labels: `enhancement`, `status:needs-review`
+Short, plain, and specific. Spanish, because the user reads it.
 
-#### Required Fields
+### For a bug
 
-| Field | Description |
-|-------|-------------|
-| **Pre-flight Checks** | Checkboxes: no duplicate + understands approval workflow |
-| **Problem Description** | The pain point this feature solves |
-| **Proposed Solution** | How it should work from the user's perspective |
-| **Affected Area** | Dropdown: Scripts, Skills, Examples, Documentation, CI/Workflows, Other |
+```markdown
+## Qué pasa
+<what the user sees, in their words>
 
-#### Optional Fields
+## Cómo repetirlo
+1. <step>
+2. <step>
 
-| Field | Description |
-|-------|-------------|
-| **Alternatives Considered** | Other approaches or workarounds |
-| **Additional Context** | Mockups, examples, references |
+## Qué debería pasar
+<expected>
+```
 
-#### Example — Feature Request via CLI
+### For a pending feature
+
+```markdown
+## Qué falta
+<the behaviour, one or two sentences>
+
+## Para qué sirve
+<why it matters — the problem it solves>
+
+## Listo cuando
+- [ ] <observable, checkable condition>
+```
+
+The **"Listo cuando"** section is the important one: it is the same kind of testable statement as
+the behaviours in a spec, so the issue can flow straight into a build later.
+
+---
+
+## Creating it
 
 ```bash
-gh issue create --template "feature_request.yml" \
-  --title "feat(scripts): add Codex support to setup.sh" \
-  --body "
-### Pre-flight Checks
-- [x] I have searched existing issues and this is not a duplicate
-- [x] I understand this issue needs status:approved before a PR can be opened
-
-### Problem Description
-The setup script only configures Claude Code, Gemini CLI, and OpenCode. Codex users have to manually copy skills.
-
-### Proposed Solution
-Add a Codex option to setup.sh that links skills to the .codex/ directory.
-
-Example:
-\`\`\`bash
-./scripts/setup.sh --agent codex
-\`\`\`
-
-### Affected Area
-Scripts (setup, installation)
-
-### Alternatives Considered
-Manually symlinking, but that defeats the purpose of the setup script.
-"
+gh issue create --title "<type>: <short description>" --body-file <file>
 ```
 
----
+Title uses the conventional-commit type prefix (`feat:`, `fix:`, `docs:`, `chore:`) so it lines up
+with branches and commits later.
 
-## Label System
-
-### Applied Automatically on Issue Creation
-
-| Template | Labels added |
-|----------|-------------|
-| Bug Report | `bug`, `status:needs-review` |
-| Feature Request | `enhancement`, `status:needs-review` |
-
-### Applied by Maintainers
-
-| Label | When to apply |
-|-------|--------------|
-| `status:approved` | Issue accepted for implementation — PRs can now be opened |
-| `priority:high` | Critical bug or urgent feature |
-| `priority:medium` | Important but not blocking |
-| `priority:low` | Nice to have |
-
----
-
-## Maintainer Approval Workflow
-
-```
-1. New issue arrives with status:needs-review
-2. Review the issue — is it valid, clear, and in scope?
-3. If YES → add status:approved label
-4. If NO → comment with reason, close if needed
-5. Contributor can now open a PR linking this issue
-```
-
----
-
-## Decision Tree
-
-```
-Is it a bug?                    → Use Bug Report template
-Is it a new feature/improvement? → Use Feature Request template
-Is it a question?               → Use Discussions, NOT issues
-Is it a duplicate?              → Link to existing issue, close
-```
-
----
-
-## Commands
+Add labels **only if the repository already defines them**:
 
 ```bash
-# Search existing issues before creating
-gh issue list --search "keyword"
-
-# Create bug report
-gh issue create --template "bug_report.yml" --title "fix(scope): description"
-
-# Create feature request
-gh issue create --template "feature_request.yml" --title "feat(scope): description"
-
-# Maintainer: approve an issue
-gh issue edit <number> --add-label "status:approved"
-
-# Maintainer: add priority
-gh issue edit <number> --add-label "priority:high"
+gh label list
 ```
+
+If it defines none, create the issue without labels. Do not create a label taxonomy uninvited.
+
+---
+
+## After creating
+
+Tell the user in one line, in Spanish, and give them the number:
+
+> Lo anoté como pendiente — issue #12. Cuando lo quieras hacer, decime "seguí con el 12".
+
+When work later starts on that issue, `branch-pr` links it with `Closes #N` in the PR body.
