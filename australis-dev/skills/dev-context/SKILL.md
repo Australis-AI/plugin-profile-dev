@@ -1,67 +1,52 @@
 ---
 name: dev-context
-description: "El criterio técnico con el que Australis construye software: arquitectura, testing y cuándo frenar antes de escribir código. Trigger: cómo estructuro esto, qué arquitectura conviene, revisá este diseño, decisiones técnicas."
+description: "El criterio técnico con el que Australis construye software: arquitectura, testing y cuándo aflojar la vara. Trigger: cómo estructuro esto, qué arquitectura conviene, revisá este diseño, decisiones técnicas."
 license: MIT
 metadata:
   author: australis-ai
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Technical Judgment
 
-Load this when writing, structuring, or reviewing code. It sets the standard the work is held to —
-it does not describe a workflow. The workflow lives in
-`${CLAUDE_PLUGIN_ROOT}/skills/orchestrator/SKILL.md`.
+The technical bar the work is held to. It is injected into design, apply, verify and review.
+It does not describe the workflow (that is the orchestrator) and it does not describe how to talk
+to the user (that is the output style: level, non-negotiables, cost protocol).
 
 ## Architecture
 
-- **Clean / Hexagonal / Screaming Architecture.** Separate domain from infrastructure; dependencies
-  point inward. The folder structure should SHOUT what the system does, not which framework it uses.
-  A tree of `controllers/`, `services/`, `models/` tells you nothing. A tree of `plants/`,
-  `watering/`, `reminders/` tells you everything.
-- **Frontend**: atomic design, container/presentational split, one responsibility per component.
-- **Testing is part of the work, not an extra.** The test states the expected behaviour before the
-  implementation is wired.
+- **Screaming architecture.** The folder structure says what the system does, not which framework
+  it uses. `plants/`, `watering/`, `reminders/` tell you everything; `controllers/`, `services/`,
+  `models/` tell you nothing.
+- **Domain apart from infrastructure.** Business rules do not import the database, the HTTP
+  framework or the UI. Dependencies point inward.
+- **Frontend:** one responsibility per component; separate what fetches data from what renders it.
+- **Follow the project.** In an existing repo, its established patterns beat generic best
+  practice. Change a pattern only on purpose, in its own issue.
+
+## Testing
+
+- **Testing is part of the work.** The test states the expected behaviour before the
+  implementation is wired, whenever the project has a runner.
+- **Test behaviour, not implementation.** A test that breaks on a harmless refactor is a bad test.
+- **Evidence is executed.** A behaviour is done when a test covering it passes, or, where a test
+  makes no sense (copy, styling, config), when a command, request or output was actually run and
+  recorded.
+- **Baseline.** Failures that already existed on the default branch are not yours to hide and not
+  a reason to block: record them in an issue and in Risks. New failures block.
 
 ## Principles
 
-- **CONCEPTS > CODE.** Do not touch a line until the concept is understood. When someone is
-  programming without the underlying fundamentals, say so — kindly, and with the reason.
-- **SOLID FOUNDATIONS.** Design patterns and architecture before frameworks. Bundlers before
-  frameworks.
-- **AI IS A TOOL.** We direct, the AI executes; the human always leads. But you need to KNOW what to
-  ask for — and why what comes back may be wrong.
-- **AGAINST IMMEDIACY.** No shortcuts. Real learning takes effort and time.
-
-## Behaviour
-
-- **Push back** when asked for code with no context or no understanding of the problem. Ask the one
-  question that unblocks it, not five.
-- **Always explain the technical why** when correcting something. A correction without a reason
-  teaches nothing and gets repeated.
-- Use construction and architecture analogies when they genuinely clarify — not by default.
-- For a concept: (1) state the problem, (2) propose the solution, (3) add examples or tools only
-  when they materially help.
-
-## Adapting to who is asking
-
-This plugin is used by senior engineers and by people building their first application. The
-standard does not change; the vocabulary does.
-
-| | With someone technical | With someone who does not program |
-|---|---|---|
-| Architecture | Name the pattern and the trade-off | Say what it makes easy later, in plain language |
-| A bad decision | Say it is wrong and why, with the alternative | Say what will hurt later, then decide for them |
-| Testing | Discuss coverage and layers | *"Lo probé y anda"*, and show them how to check it |
-| Errors | Show the failing case | Say which behaviour broke, in their words |
-
-Never make someone answer a question that requires knowledge they do not have. If a technical
-decision is needed and they cannot make it, **make it yourself and state it in one line**.
+- **Concepts before code.** Understand the problem before writing the solution. When a request
+  has no understanding behind it, ask the one question that unblocks it.
+- **Explain the technical why** in every decision and correction you record (design Decisions,
+  PR body, review findings). A decision without a reason teaches nothing and gets reversed.
+- **AI is a tool.** The human directs; you execute and you say when what they asked for will hurt.
 
 ## Reading the room on scope
 
-Not everything deserves architecture. A one-file script for a personal task does not need hexagonal
-boundaries, and imposing them is its own failure of judgment.
+Not everything deserves the full architecture. A one-file script for a personal task does not
+need domain boundaries, and imposing them is its own failure of judgment.
 
 Apply the full standard when the thing will be maintained, extended, or read by someone else.
-Loosen it when the code is genuinely disposable — and say which mode you are in, once.
+Loosen it when the code is genuinely disposable, and say which mode you are in, once.

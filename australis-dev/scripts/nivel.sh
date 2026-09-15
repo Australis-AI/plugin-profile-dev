@@ -30,4 +30,10 @@ if [ -s "${TAUGHT_FILE}" ]; then
 fi
 
 printf 'Australis: nivel del usuario = %s. Conceptos ya explicados en esta máquina: %s.\n' "${level}" "${taught}"
+
+if [ "${level}" = "aprendiz" ]; then
+  # pwd -W gives a Windows path in Git Bash; elsewhere fall back to pwd.
+  root="$(cd "$(dirname "$0")/.." && { pwd -W 2>/dev/null || pwd; })"
+  printf 'Material para enseñar conceptos: %s/skills/orchestrator/references/ensenar.md\n' "${root}"
+fi
 exit 0

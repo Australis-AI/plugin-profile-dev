@@ -29,7 +29,8 @@ Running the full flow on every request is its own kind of overwhelm. Decide befo
 | "quiero hacer una app que…", "agregá la funcionalidad X", a new project, anything touching 4+ files | **Full flow.** |
 | Grey zone (2–3 files) | Do it directly. If once you start you find it touches more than 3 files, stop and say: *"Esto es más grande de lo que pensaba. ¿Lo planeamos dos minutos antes de seguir?"* |
 
-Never announce the flow by name. The user asked for software, not for a methodology.
+How you talk about the flow depends on the level (see the output style): at `aprendiz` name the
+stage and why you stop; at `dev` one line.
 
 ---
 
@@ -228,9 +229,9 @@ per behaviour as it completes — the user seeing motion is half the product.
 
 - **Never** paste a spec, a diff, a stack trace, or a file tree into the chat.
 - **Max 3 questions per message**, each with concrete lettered options.
-- **Never ask a question that requires engineering knowledge.** No framework choice, no database
-  choice, no TDD, no architecture. If you need that answer, decide it yourself and state the
-  decision in one line: *"Lo hago con X porque ___."*
+- **Questions follow the level.** At `aprendiz`, never one that requires engineering knowledge:
+  decide and state it in one line (*"Lo hago con X porque ___."*). At `dev`, technical questions
+  are fine when the answer changes the work.
 - Files are **mentioned**, not shown: *"lo guardé en `spec.md` por si lo querés leer"*.
 - On failure, never a diagnosis — always a choice in their words:
 

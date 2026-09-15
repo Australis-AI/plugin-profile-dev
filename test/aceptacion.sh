@@ -129,6 +129,16 @@ else
   [ ! -e "$P/scripts/memory-check.sh" ] && ok "sin el chequeo de memoria viejo" \
     || no "sigue memory-check.sh"
 
+  ST="$P/output-styles/australis-dev.md"
+  if [ -f "$ST" ]; then
+    grep -q '^force-for-plugin: true' "$ST" && ok "la persona se aplica sola (force-for-plugin)" \
+      || no "el style no tiene force-for-plugin: true"
+    grep -q '^keep-coding-instructions: true' "$ST" && ok "la persona conserva las reglas de código" \
+      || no "el style no tiene keep-coding-instructions: true" "Claude pierde sus instrucciones de ingeniería"
+  else
+    no "falta el output style de la persona"
+  fi
+
   MK="$H/.claude/plugins/marketplaces/australis-dev/.claude-plugin/marketplace.json"
   # A local TEST_SOURCE is read in place, not cloned into marketplaces/.
   [ -f "$MK" ] || MK="$REPO_SLUG/.claude-plugin/marketplace.json"
@@ -153,6 +163,12 @@ if [ -x "$P/scripts/nivel.sh" ]; then
   out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"
   printf '%s' "$out" | grep -q 'nivel del usuario = dev' \
     && ok "con nivel elegido: lo informa (tolera CRLF)" || no "no informa el nivel" "$out"
+
+  printf 'aprendiz\n' > "$H/.australis/nivel"
+  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"
+  mat="$(printf '%s' "$out" | sed -n 's/^Material para enseñar conceptos: //p')"
+  [ -n "$mat" ] && [ -f "$mat" ] && ok "en aprendiz apunta al material para enseñar, y existe" \
+    || no "en aprendiz no apunta a un material que exista" "$out"
 
   printf 'cualquiera\n' > "$H/.australis/nivel"
   out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"; rc=$?

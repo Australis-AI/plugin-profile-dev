@@ -115,7 +115,9 @@ Every phase MUST return:
 ### User-facing checkpoint fields
 
 Three phases additionally carry the text the orchestrator shows the user. These are **Spanish,
-plain, no jargon** — never a spec, a diff, a stack trace, or a file tree.
+plain, no jargon** — never a spec, a diff, a stack trace, or a file tree. Rioplatense register
+with voseo (*vos, tenés, podés*), never *tú/tienes*: the output style does not reach you, so the
+register has to come from here.
 
 | Phase | Field | Content |
 |---|---|---|
