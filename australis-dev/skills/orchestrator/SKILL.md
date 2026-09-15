@@ -230,7 +230,14 @@ By `tipo_de_repo`, never by level:
 
 ### 7. Pull request
 
-Build `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
+Before the PR, keep permanent documentation current, on the same branch:
+- **ADRs:** for each entry under *ADR candidates* in `design.md`, write one with
+  `${CLAUDE_PLUGIN_ROOT}/skills/adr/SKILL.md`.
+- **README and runbook:** if the change adds or renames an environment variable, changes how to
+  run, test or publish, or adds an external service, update them with
+  `${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`.
+
+Commit those (`docs(...)`) and push. Then build `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
 (Context, Decisions, Risks, Verification, `Closes #N`) and run `gh pr create --base <default>
 --title "<conventional title>" --body-file <pr.md>`, or `gh pr edit --body-file` if it exists.
 
