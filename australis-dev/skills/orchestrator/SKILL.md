@@ -43,7 +43,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/contexto.sh"
 It prints `key: value` lines: `nivel`, `onedrive`, `repo`, `firma_git`, `remoto`, `github`,
 `repo_github`, `rama_por_defecto`, `rama_actual`, `commits_en_rama_por_defecto`,
 `commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `epica_abierta`, `pr_de_la_rama`,
-`comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`.
+`comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`,
+`app_publicada`.
 Read it silently. Re-run it after any step that changes branches or GitHub state.
 
 Stop and send the user to `/preparar` (one line) when a write is needed and `github` is
@@ -58,6 +59,7 @@ Stop and send the user to `/preparar` (one line) when a write is needed and `git
 | Something new: an app, a feature, several steps | **New work** (`/nuevo`) |
 | "hacé el #4", "construí lo que sigue", "seguí con la épica" | **Build an issue** (`/construir`) |
 | "seguí", "¿dónde quedamos?", a new session mid-issue | **Resume** (`/seguir`) |
+| "publicala", "subila a internet", "¿está publicada?" | **Publish** (`/publicar`) |
 
 Grey zone: start as a quick fix. If it grows past about three files, or needs a decision from the
 user, stop and turn it into an issue of the open epic (*"Esto es más grande de lo que parecía: lo
@@ -71,6 +73,7 @@ locally on the issue branch.
 
 - Run `git add` and `git commit` as **separate** commands: the guard hook blocks them combined,
   because it inspects what is staged before the commit.
+- Run `gh … --jq '…'` from the **Bash tool**: PowerShell splits the jq expression and gh fails.
 - If Claude Code denies an action, do not look for another way to do it. Give the user one
   sentence to type that names the action and its target, e.g. *"Integrá el PR #4 de gastos a
   main"*, and retry after they send it.
@@ -240,8 +243,8 @@ Show, in Spanish:
    stack, append `-- --hostname 127.0.0.1`), read the URL from its output, and give the link. Stop
    the server when the gate closes and before any package install.
 3. The options, answered by writing in the chat:
-   - `integrar` — not offered in a team repo. With deployment connected, call it *"integrar
-     (también publica)"*.
+   - `integrar` — not offered in a team repo. When `app_publicada` is not `no`, call it
+     *"integrar (también publica)"*.
    - `corregir` — a correction batch on the same branch, then back to this gate.
    - `dejar en la rama`.
 
@@ -293,6 +296,27 @@ a file.
    epic: suggest `/nuevo`.
 3. Greet with context in one sentence and one question, e.g. *"Veníamos con «Gastos»: está
    hecho el #1 y sigue el #2, cargar un gasto. ¿Vamos?"*
+
+## Publish — `/publicar`
+
+Production always comes from the default branch, trunk-based: nothing is deployed from a feature
+branch, and staging (where it exists) follows the default branch too, so production receives the
+same commit that was already seen in staging.
+
+1. Context. If `cambios_sin_commitear` > 0 or the current branch has unintegrated work, say it in
+   one line and offer to finish that issue first.
+2. Route by owner of `repo_github`:
+   - **`Australis-AI/…` (Australis infrastructure):** read the deploy SOP from
+     `$CEREBRO_DIR/australis/dev/reference/deploy-dokploy.md` (`CEREBRO_DIR` is an environment
+     variable on Agus's machines). If the variable or the file is missing, say *"Este repo se
+     publica con el procedimiento interno de Australis, que no está en esta compu."* and stop.
+     Otherwise follow the SOP with these method rules on top: PRs always target the default
+     branch; the staging app tracks the default branch; production is promoted with the same
+     commit; production migrations are manual with a backup. Where the SOP still describes a
+     `staging` branch, follow the trunk rules and tell Agus the SOP needs updating. Never copy
+     server addresses, hosts or keys from the SOP into the repository, an issue or a PR.
+   - **Anything else (clients, Australis stack):** follow
+     `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
 
 ---
 

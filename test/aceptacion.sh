@@ -121,6 +121,11 @@ else
   [ -z "$leak" ] && ok "no depende de la máquina del autor" \
     || no "depende de rutas del autor:" "$leak"
 
+  # Clients receive this package: Australis server addresses must never ship in it.
+  infra="$(grep -rl -E '154\.12\.246\.59|australisai\.xyz' "$P" 2>/dev/null | head -3)"
+  [ -z "$infra" ] && ok "no expone la infraestructura de Australis" \
+    || no "aparecen direcciones de la infraestructura de Australis:" "$infra"
+
   # Engram is optional: agents may use its tools only under the name a direct
   # MCP registration exposes. The plugin-namespaced name never existed.
   stale="$(grep -rl 'mcp__plugin_engram' "$P" 2>/dev/null | head -3)"

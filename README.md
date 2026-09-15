@@ -50,6 +50,7 @@ La mayoría de las veces no hace falta ningún comando: le decís qué querés c
 | `/nuevo` | Arrancar algo nuevo: entendemos qué querés, armamos la épica y la aprobás |
 | `/construir` | Construir el próximo paso de la épica y mostrarte que anda |
 | `/seguir` | Retomar donde quedaste, en otra sesión o en otra compu |
+| `/publicar` | Poner tu app en internet (la primera vez te guío; después se publica sola) |
 | `/juzgar` | Revisión a fondo: dos revisores ciegos sobre el mismo cambio |
 | `/preparar` | Dejar la compu lista (una vez); `/preparar nivel` cambia cómo trabajamos |
 | `/chequeo` | Ver si algo se rompió, y qué hacer exactamente |

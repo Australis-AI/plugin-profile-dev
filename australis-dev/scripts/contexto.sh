@@ -154,4 +154,7 @@ say gestor_paquetes "$([ -f package.json ] && echo "$pm" || echo ninguno)"
 
 if grep -q '^Stack: australis' README.md 2>/dev/null; then say stack australis; else say stack propio; fi
 
+published="$(sed -n 's/^App publicada:[[:space:]]*//p' README.md 2>/dev/null | head -1)"
+say app_publicada "${published:-no}"
+
 exit 0
