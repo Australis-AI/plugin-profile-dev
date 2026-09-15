@@ -1,15 +1,14 @@
 {
-  "description": "Australis dev — warns once per session when persistent memory is installed but not connected",
+  "description": "Australis dev — tells the session which level this machine is set to",
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|clear",
+        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/memory-check.sh\"",
-            "timeout": 5,
-            "statusMessage": "Revisando la memoria..."
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/nivel.sh\"",
+            "timeout": 3
           }
         ]
       }

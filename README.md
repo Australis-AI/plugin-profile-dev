@@ -15,28 +15,31 @@ Instalá el kit de Australis: https://github.com/Australis-AI/plugin-profile-dev
 Leé el INSTALL.md de ese repo y seguilo paso a paso.
 ```
 
-Claude hace el resto. Te va a pedir permiso comando por comando y al final te va a decir que
-cierres y abras Claude Code. Cuando vuelvas, escribí `/preparar` y termina de configurarse solo.
+Claude hace el resto. Si te faltan herramientas, te pide permiso una sola vez para instalarlas y
+te avisa de los carteles de Windows. Como mucho vas a reiniciar una vez. Cuando termine, escribí
+`/preparar`: ahí elegís cómo querés trabajar, conectás GitHub y queda todo listo.
 
 Si preferís hacerlo a mano:
 
 ```bash
 claude plugin marketplace add Australis-AI/plugin-profile-dev
 claude plugin install australis-dev@australis-dev --scope user
-# reiniciá Claude Code, después:
+# en Claude Code: /reload-plugins, y después:
 /preparar
 ```
 
-### Qué necesitás tener antes
+### Qué necesitás
 
-| | Para qué | Obligatorio |
+| | Para qué | ¿Quién lo instala? |
 |---|---|---|
-| **Claude Code** | Es donde corre todo | Sí |
-| **Git** | Para guardar tu trabajo y manejar las ramas | Sí |
-| **Engram** (memoria) | Para que se acuerde de tu proyecto entre sesiones | No — `/preparar` lo instala, y si falla el kit funciona igual |
-| **GitHub CLI (`gh`)** | Solo si querés abrir pull requests | No |
+| **Claude Code** | Es donde corre todo | Vos |
+| **Cuenta de GitHub** | Es donde se guarda tu trabajo y su historia | Vos (gratis); `/preparar` te guía |
+| **Git** | Para guardar tu trabajo y manejar las ramas | La instalación, con tu permiso |
+| **GitHub CLI (`gh`)** | Para que el kit trabaje con GitHub por vos | La instalación, con tu permiso |
+| **Node** | Para crear y correr apps | La instalación, con tu permiso |
 
-Funciona en Windows, macOS y Linux. En Windows no hace falta instalar Go, Node ni Python.
+Funciona en Windows, macOS y Linux. En Windows todo se instala con el instalador de aplicaciones
+del sistema (winget): nada de descargar programas sueltos.
 
 ## Cómo se usa
 
@@ -48,7 +51,7 @@ La mayoría de las veces no hace falta ningún comando: le decís qué querés c
 | `/construir` | Construir lo que ya acordaron y verificar que ande |
 | `/seguir` | Retomar donde quedaste, en otra sesión |
 | `/juzgar` | Revisión adversarial: dos revisores ciegos sobre el mismo código |
-| `/preparar` | Terminar la instalación (una sola vez) |
+| `/preparar` | Dejar la compu lista (una vez); `/preparar nivel` cambia cómo trabajamos |
 | `/chequeo` | Ver si algo se rompió, y qué hacer exactamente |
 
 ### El flujo

@@ -3,58 +3,111 @@
 > Este archivo está dirigido a Claude Code, no a una persona. Si sos el usuario: abrí Claude Code,
 > pegale el link de este repo y pedile que siga el `INSTALL.md`. Él se encarga.
 
-Claude: seguí estos tres pasos y **nada más**. Todo el resto de la instalación lo hace el comando
-`/preparar`, que existe recién después del paso 2.
+Claude: seguí estos pasos y **nada más**. Todo lo que viene después lo hace `/preparar`, que existe
+recién cuando termina el paso 3.
 
-Hablá en castellano, llano. Pedí permiso comando por comando, nunca en lote.
+Hablá en castellano, llano, con voseo. En Windows usá la herramienta **PowerShell** para cada
+comando. En macOS o Linux usá Bash e instalá lo que falte con el gestor del sistema (`brew`, el
+paquete de la distro o nodejs.org).
 
-## Paso 1 — Verificar lo mínimo
+## Paso 1 — Ver qué hay
+
+En una sola llamada de PowerShell, sin mostrarle la salida al usuario, comprobá:
+
+- `claude --version`
+- Git: `Test-Path "$env:ProgramFiles\Git\cmd\git.exe"` o `Get-Command git`
+- GitHub CLI: `Test-Path "$env:ProgramFiles\GitHub CLI\gh.exe"` o `Get-Command gh`
+- Node: `Test-Path "$env:ProgramFiles\nodejs\node.exe"` o `Get-Command node`
+- Si el plugin ya está instalado: `claude plugin list`, buscando `australis-dev`
+
+Si el plugin ya está instalado, no lo reinstales: decile *"El kit ya está instalado. Escribí
+`/preparar`."* y terminá.
+
+## Paso 2 — Instalar lo que falte (sólo si falta Git, GitHub CLI o Node)
+
+Git tiene que estar antes que el plugin: el kit se descarga con Git.
+
+Pedí **un solo** permiso para todo, con este aviso:
+
+> Para usar el kit te faltan: [Git / GitHub CLI / Node]. Los instalo ahora. Windows te va a pedir
+> permiso de administrador hasta [N] veces: tocá "Sí". Si no ves la ventana, mirá el escudo que
+> titila en la barra de tareas. ¿Dale?
+
+Con el sí, instalá cada uno en su propia llamada de PowerShell, con timeout 600000:
 
 ```
-claude --version
-git --version
+& "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" install --id <Id> -e --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity
 ```
 
-Si falta `git`, decile:
+| Herramienta | Id | Quedó instalada si existe |
+|---|---|---|
+| Git | `Git.Git` | `$env:ProgramFiles\Git\cmd\git.exe` |
+| GitHub CLI | `GitHub.cli` | `$env:ProgramFiles\GitHub CLI\gh.exe` |
+| Node LTS | `OpenJS.NodeJS.LTS` | `$env:ProgramFiles\nodejs\node.exe` |
 
-> Te falta Git. Bajalo de git-scm.com/download/win y dale "Siguiente" a todo. Cuando termine,
-> volvé y pedime que siga con la instalación.
+Juzgá el resultado por la ruta, no por el código de salida de winget.
 
-Y pará acá. Sin Git no sigue nada.
+Si no existe `winget.exe`, decí: *"Tu Windows no tiene el instalador de aplicaciones. Abrí
+Microsoft Store, buscá 'App Installer', instalalo y pegame de nuevo el mensaje del principio."* y
+pará.
 
-## Paso 2 — Instalar el plugin
+Si instalaste algo, imprimí esto y terminá. Es el único reinicio:
+
+```
+Instalé las herramientas. Hace falta reiniciar una sola vez:
+cerrá VS Code entero (Archivo → Salir) o la terminal, abrilo de nuevo
+y pegame el mismo mensaje del principio.
+```
+
+## Paso 3 — Instalar el plugin
+
+**Si `claude` responde en PowerShell**, corré:
 
 ```
 claude plugin marketplace add Australis-AI/plugin-profile-dev
 claude plugin install australis-dev@australis-dev --scope user
 ```
 
-`--scope user` no es opcional: hace que el kit esté disponible en todas las carpetas. Sin eso
-desaparece al abrir otro proyecto.
+`--scope user` no es opcional: hace que el kit esté disponible en todas las carpetas.
 
-## Paso 3 — Mandarlo a reiniciar
+**Si `claude` no responde** (pasa con la extensión de VS Code sola), pedile al usuario que escriba
+en el chat, de a una:
 
-Imprimí exactamente esto y terminá:
+```
+/plugin marketplace add Australis-AI/plugin-profile-dev
+/plugin install australis-dev@australis-dev
+```
+
+y que elija instalarlo para su usuario.
+
+Después imprimí exactamente esto y terminá:
 
 ```
 ✅ Listo, el kit está instalado.
 
-Ahora cerrá Claude Code y abrilo de nuevo — hace falta para que cargue.
-
-Cuando vuelvas, escribí:  /preparar
+Escribí /reload-plugins para cargarlo (si te avisa algo del caché: /reload-plugins --force).
+Después escribí:  /preparar
 ```
 
 ---
 
 ## Reglas para vos, Claude
 
-- **No** instales la memoria acá. **No** toques el PATH. **No** menciones Windows Defender.
-  Todo eso vive en `/preparar`, que se actualiza solo con el plugin. Este archivo no.
+- **No** configures GitHub, la firma de git ni el nivel acá: eso es de `/preparar`, que se
+  actualiza con el plugin. Este archivo no.
 - **Nunca** uses `--dangerously-skip-permissions` ni cambies permisos en ningún `settings.json`.
 - **Nunca** bajes y ejecutes un script remoto.
-- **Nunca** instales Go, Node, Python ni compiladores.
-- Si el usuario ya tiene el plugin instalado, no lo reinstales: mandalo directo a `/preparar`.
+- **Nunca** desactives Windows Defender ni ningún antivirus.
 
-Este archivo es un cargador de arranque, no un instalador. Su único trabajo es poner `/preparar`
-en la máquina. Si alguna vez crece más allá de estos tres pasos, la instalación se vuelve
-imposible de arreglar sin que el usuario vuelva al repo.
+Este archivo es un cargador de arranque, no un instalador completo. Su único trabajo es dejar las
+herramientas y `/preparar` en la máquina. Si crece más allá de estos tres pasos, la instalación se
+vuelve imposible de arreglar sin que el usuario vuelva al repo.
+
+## Si ya programás y querés el kit sólo en algunos repos
+
+No lo instales a scope user. En cambio:
+
+```
+claude plugin marketplace add Australis-AI/plugin-profile-dev    # una vez por máquina
+claude plugin install australis-dev@australis-dev --scope local  # en cada repo donde lo quieras
+```

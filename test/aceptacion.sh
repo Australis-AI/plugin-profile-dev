@@ -2,9 +2,11 @@
 # Acceptance test — run this before handing the plugin to anyone.
 #
 #   bash test/aceptacion.sh
+#   TEST_SOURCE="C:/path/to/plugin-profile-dev" bash test/aceptacion.sh   # test a branch before merging
 #
 # Simulates a fresh Windows machine and installs the plugin from the real
 # GitHub remote, exactly as a client would. Every check prints PASS or FAIL.
+# Set TEST_SOURCE to a local clone (or owner/repo) to test unmerged work.
 #
 # Why the isolation matters: the author's machine has other tooling that leaves
 # files in ~/.claude and binaries on PATH. Version 1 of this plugin appeared to
@@ -13,7 +15,7 @@
 
 set -u
 
-REPO_SLUG="Australis-AI/plugin-profile-dev"
+REPO_SLUG="${TEST_SOURCE:-Australis-AI/plugin-profile-dev}"
 PLUGIN="australis-dev@australis-dev"
 
 # Short paths on purpose: Windows caps paths at 260 characters unless
@@ -51,8 +53,6 @@ if [ -z "$(run claude plugin list 2>&1 | grep -i 'no plugins')" ]; then
 else
   ok "ambiente limpio: sin plugins, sin CLAUDE.md, sin skills"
 fi
-
-run command -v engram >/dev/null 2>&1 && no "engram sigue en el PATH — el aislamiento filtra" || ok "sin engram en el PATH"
 
 lp="$(git config --global core.longpaths 2>/dev/null)"
 [ "$lp" = "true" ] && ok "core.longpaths activado" \
@@ -92,8 +92,19 @@ else
   [ "$n_ag" -ge 5 ]  && ok "$n_ag agentes" || no "solo $n_ag agentes"
   [ "$n_cm" -ge 4 ]  && ok "$n_cm comandos" || no "solo $n_cm comandos"
   [ -f "$P/hooks/hooks.json" ] && ok "hook presente" || no "falta hooks.json"
-  [ -x "$P/scripts/memory-check.sh" ] && ok "script del hook ejecutable" \
-    || no "el script del hook no tiene bit de ejecución" "el hook no va a correr"
+
+  # Every script, not just one: a script added later with CRLF or without the
+  # exec bit fails silently on Windows.
+  for s in "$P"/scripts/*.sh; do
+    [ -e "$s" ] || continue
+    name="$(basename "$s")"
+    [ -x "$s" ] && ok "$name ejecutable" || no "$name sin bit de ejecución" "no va a correr"
+    if grep -q $'\r' "$s" 2>/dev/null; then
+      no "$name tiene CRLF" "Git Bash va a fallar con 'bad interpreter'"
+    else
+      ok "$name sin CRLF"
+    fi
+  done
 
   # This is the check that would have caught the v1 failure.
   broken=""
@@ -109,24 +120,47 @@ else
   [ -z "$leak" ] && ok "no depende de la máquina del autor" \
     || no "depende de rutas del autor:" "$leak"
 
-  crlf="$(file "$P/scripts/memory-check.sh" 2>/dev/null | grep -c CRLF)"
-  [ "${crlf:-0}" -eq 0 ] && ok "script sin CRLF" \
-    || no "el script tiene CRLF" "Git Bash va a fallar con 'bad interpreter'"
+  # Engram is optional: agents may use its tools only under the name a direct
+  # MCP registration exposes. The plugin-namespaced name never existed.
+  stale="$(grep -rl 'mcp__plugin_engram' "$P" 2>/dev/null | head -3)"
+  [ -z "$stale" ] && ok "sin nombres de herramientas de memoria que no existen" \
+    || no "quedan nombres mcp__plugin_engram:" "$stale"
+
+  [ ! -e "$P/scripts/memory-check.sh" ] && ok "sin el chequeo de memoria viejo" \
+    || no "sigue memory-check.sh"
+
+  MK="$H/.claude/plugins/marketplaces/australis-dev/.claude-plugin/marketplace.json"
+  # A local TEST_SOURCE is read in place, not cloned into marketplaces/.
+  [ -f "$MK" ] || MK="$REPO_SLUG/.claude-plugin/marketplace.json"
+  if [ -f "$MK" ]; then
+    grep -q '"version"' "$MK" && no "marketplace.json repite la versión" "la versión vive sólo en plugin.json" \
+      || ok "la versión vive sólo en plugin.json"
+  else
+    sk "no encuentro marketplace.json para revisar la versión"
+  fi
 fi
 
 # ------------------------------------------------------------- degradation --
 head_ "3. Degradación: qué pasa cuando falta algo"
 
-if [ -x "$P/scripts/memory-check.sh" ]; then
-  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/memory-check.sh" 2>&1)"
-  [ -z "$out" ] && ok "sin memoria instalada: no molesta" \
-    || no "avisa a alguien que nunca tuvo memoria" "$out"
+if [ -x "$P/scripts/nivel.sh" ]; then
+  rm -rf "$H/.australis"
+  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"; rc=$?
+  [ $rc -eq 0 ] && [ -z "$out" ] && ok "sin /preparar: el hook de nivel no dice nada" \
+    || no "el hook de nivel habla o falla sin nivel elegido" "$out"
 
-  mkdir -p "$H/.claude/australis" && touch "$H/.claude/australis/memoria-off"
-  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/memory-check.sh" 2>&1)"
-  [ -z "$out" ] && ok "respeta al que dijo que no quiere memoria" \
-    || no "insiste después de un no" "$out"
-  rm -f "$H/.claude/australis/memoria-off"
+  mkdir -p "$H/.australis" && printf 'dev\r\n' > "$H/.australis/nivel"
+  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"
+  printf '%s' "$out" | grep -q 'nivel del usuario = dev' \
+    && ok "con nivel elegido: lo informa (tolera CRLF)" || no "no informa el nivel" "$out"
+
+  printf 'cualquiera\n' > "$H/.australis/nivel"
+  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"; rc=$?
+  [ $rc -eq 0 ] && [ -z "$out" ] && ok "nivel inválido: no inventa nada" \
+    || no "con nivel inválido habla o falla" "$out"
+  rm -rf "$H/.australis"
+else
+  no "falta el hook de nivel (scripts/nivel.sh)"
 fi
 
 # ------------------------------------------------------------------ safety --
@@ -157,7 +191,8 @@ cat <<'PENDIENTE'
      cuántas veces tuvo que decidir algo. Más de 3 checkpoints = falla de diseño.
   3. Que nunca le pregunte algo que no pueda contestar (framework, base de
      datos, TDD). Si pasa una sola vez, es un bug.
-  4. Instalar Engram siguiendo /preparar en una máquina con Defender activo.
+  4. INSTALL.md + /preparar en un Windows limpio: como mucho un reinicio,
+     GitHub conectado desde el navegador, firma de git puesta y /chequeo sin ❌.
 
 PENDIENTE
 

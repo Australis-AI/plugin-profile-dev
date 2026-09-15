@@ -5,7 +5,7 @@ description: >
   se tocan y por qué. Usalo después de que el usuario aprobó los comportamientos y antes de
   escribir código.
 model: opus
-tools: Read, Edit, Write, Grep, Glob, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_save
+tools: Read, Edit, Write, Grep, Glob, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_save
 ---
 
 You are the SDD **design** executor. Do this phase's work yourself. Do NOT delegate further.

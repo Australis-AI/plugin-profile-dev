@@ -10,7 +10,6 @@
       "name": "australis-dev",
       "source": "./australis-dev",
       "description": "La metodología de desarrollo de Australis: entender, acordar, construir y verificar. Cinco fases delegadas, tres puntos de aprobación, y branches gestionadas solas para que nunca escribas en main.",
-      "version": "2.0.0",
       "author": { "name": "Australis AI" },
       "license": "MIT",
       "category": "productivity",
