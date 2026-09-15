@@ -1,52 +1,65 @@
 ---
 name: judgment-day
-description: "Revisión adversarial: dos revisores ciegos miran el mismo código, se contrastan, se arregla lo confirmado y se vuelve a revisar. Trigger: juzgar, que lo juzguen, revisión doble, revisá esto en serio."
+description: "Revisión adversarial de un cambio: un revisor ciego en el flujo normal, o dos que se contrastan con /juzgar. Trigger: juzgar, que lo juzguen, revisión doble, revisá esto en serio."
 license: Apache-2.0
 metadata:
   author: australis-ai
-  version: "1.4"
+  version: "2.0"
 ---
 
-## Activation Contract
+# Judgment Day — adversarial review
 
-Load this skill only when the user explicitly asks for Judgment Day, dual/adversarial review, or equivalent Spanish trigger (`juzgar`, `que lo juzguen`). Review a specific target: files, feature, PR, or architecture slice.
+Someone who did not write the code looks for what is wrong with it. You never review the code
+yourself: you launch blind reviewers, then confirm or discard what they report.
 
-## Hard Rules
+Prompts and formats: `${CLAUDE_PLUGIN_ROOT}/skills/judgment-day/references/prompts-and-formats.md`.
 
-- Resolve project skills before launching agents: read skill registry, match skill paths by target files/task, and inject the same `Skills to load before work` block into both judge prompts and fix prompts.
-- Launch **two blind judges in parallel** with identical target and criteria; never review the code yourself.
-- Wait for both judges before synthesis; never accept a partial verdict.
-- Classify warnings as `WARNING (real)` only if normal intended use can trigger them; otherwise downgrade to INFO as `WARNING (theoretical)`.
-- Ask before fixing Round 1 confirmed issues.
-- After any fix agent runs, immediately re-launch both judges in parallel before commit/push/done/session summary.
-- Terminal states are only `JUDGMENT: APPROVED` or `JUDGMENT: ESCALATED`.
-- After 2 fix iterations with remaining issues, ask the user whether to continue.
+## Modes
 
-## Decision Gates
+| Mode | Used by | Reviewers | Fixes |
+|---|---|---|---|
+| **single** | the orchestrator, on every issue in a one-person repo | `australis-dev:jd-judge-a` | `australis-dev:sdd-apply` in correction mode |
+| **dual** | `/juzgar`, opt-in | `australis-dev:jd-judge-a` and `australis-dev:jd-judge-b`, in parallel, blind | `australis-dev:jd-fix-agent` |
 
-| Condition | Action |
+Model for all of them: `sonnet`.
+
+## Target and criteria
+
+- Target: `git diff <default>...HEAD` for a branch, `gh pr diff <n>` for a PR, or named files.
+- Criteria: the issue's "listo cuando" (from `.australis/trabajo/<N>/issue.md` when it exists),
+  `${CLAUDE_PLUGIN_ROOT}/skills/dev-context/SKILL.md`, and the security checks in the prompt.
+  Inject the same criteria and paths into every reviewer.
+
+## Single mode
+
+1. Launch the single-reviewer prompt. The reviewer never asks anything and never edits.
+2. For each finding, **confirm it yourself** before acting: open the cited code and check the
+   claim, or write a test that fails because of it. A finding you cannot confirm is not a fix.
+3. Confirmed CRITICAL and real WARNING findings → one correction batch → tests again.
+   Re-review once. Stop there.
+4. Anything left: into the PR's Risks at `dev`; at `aprendiz` mention it only if it is about
+   security.
+
+## Dual mode
+
+1. Launch Judge A and Judge B concurrently with identical prompts. Wait for both.
+2. Synthesize:
+
+| Situation | Status |
 |---|---|
-| Target unclear | Ask for scope; do not launch judges. |
-| No skill registry | Warn, proceed with generic criteria, and record `Skill Resolution: none`. |
-| Both judges find same CRITICAL/real WARNING | Confirmed; ask/fix according to round rules. |
-| One judge finds issue | Suspect; report and triage, do not auto-fix. |
-| Judges contradict | Escalate for manual decision. |
-| Round 2+ has only theoretical warnings/suggestions | Report as INFO; do not re-judge. |
+| Both report the same CRITICAL or real WARNING | Confirmed → fix |
+| Only one reports it | Suspect → confirm it yourself; fix only if confirmed |
+| They contradict each other | Escalate: tell the user in one line and ask |
+| Theoretical warnings and suggestions | Info, no fix |
 
-## Execution Steps
+3. At `aprendiz`, fix confirmed findings without asking. At `dev`, show the confirmed list and ask
+   once before fixing.
+4. After fixes, re-judge both in parallel. At most 2 fix rounds; if issues remain, ask whether to
+   continue.
+5. Terminal state is always one of: **Aprobado** or **Escalado — necesita revisión humana**.
 
-1. Confirm target and optional custom criteria.
-2. Resolve exact skill paths from registry or warn if missing.
-3. Start Judge A and Judge B concurrently via delegation.
-4. Synthesize findings into confirmed, suspect, contradiction, and INFO buckets.
-5. Ask before Round 1 fixes; delegate a separate fix agent for confirmed approved fixes only.
-6. Re-judge in parallel after fixes; repeat until approved, escalated, or user asks to stop.
-7. Before any terminal action, verify every active Judgment Day has a terminal state.
+## Rules
 
-## Output Contract
-
-Return `## Judgment Day — {target}` with round number, verdict table, confirmed/suspect/contradiction counts, fixes applied, re-judgment result, `Skill Resolution`, and final `JUDGMENT: APPROVED ✅` or `JUDGMENT: ESCALATED ⚠️`.
-
-## References
-
-- [references/prompts-and-formats.md](references/prompts-and-formats.md) — judge/fix prompts, warning rubric, verdict tables, and language snippets.
+- Classify a warning as real only if normal intended use can trigger it.
+- Missing row-level security, a secret in code, or an unauthenticated write is always CRITICAL.
+- Never paste reviewer output to the user; report what was found, fixed, and left, in Spanish.

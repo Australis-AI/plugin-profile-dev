@@ -16,6 +16,7 @@
 set -u
 
 REPO_SLUG="${TEST_SOURCE:-Australis-AI/plugin-profile-dev}"
+TESTDIR="$(cd "$(dirname "$0")" && pwd)"   # absolute: later steps cd elsewhere
 PLUGIN="australis-dev@australis-dev"
 
 # Short paths on purpose: Windows caps paths at 260 characters unless
@@ -129,6 +130,10 @@ else
   [ ! -e "$P/scripts/memory-check.sh" ] && ok "sin el chequeo de memoria viejo" \
     || no "sigue memory-check.sh"
 
+  # v2 left a file-based flow and OpenSpec remnants that no longer exist.
+  stale="$(grep -rlE 'ADDED Requirements|REQ-0[0-9]|Review Workload|\.australis/cambios|\.atl/|proyecto\.json|skill-registry|delivery_strategy|ORCHESTRATOR GATE' "$P" 2>/dev/null | head -3)"
+  [ -z "$stale" ] && ok "sin restos del flujo viejo" || no "quedan restos del flujo viejo:" "$stale"
+
   ST="$P/output-styles/australis-dev.md"
   if [ -f "$ST" ]; then
     grep -q '^force-for-plugin: true' "$ST" && ok "la persona se aplica sola (force-for-plugin)" \
@@ -179,6 +184,17 @@ else
   no "falta el hook de nivel (scripts/nivel.sh)"
 fi
 
+if [ -f "$P/scripts/contexto.sh" ]; then
+  empty="$(mktemp -d)"
+  out="$(cd "$empty" && env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/contexto.sh" 2>&1)"; rc=$?
+  rm -rf "$empty"
+  [ $rc -eq 0 ] && printf '%s' "$out" | grep -q '^repo: no' \
+    && ok "contexto en una carpeta vacía: responde sin fallar" \
+    || no "contexto falla en una carpeta vacía" "$(printf '%s' "$out" | tail -3)"
+else
+  no "falta scripts/contexto.sh"
+fi
+
 # ------------------------------------------------------------------ safety --
 head_ "4. Seguridad"
 
@@ -192,6 +208,23 @@ if [ -d "$P" ]; then
 
   grep -rqi 'default branch\|rama por defecto\|protected branch' "$P" 2>/dev/null \
     && ok "hay guarda de rama protegida" || no "no encuentro la guarda de rama"
+
+  if grep -q '"matcher": "Bash|PowerShell"' "$P/hooks/hooks.json" 2>/dev/null; then
+    ok "el guard mira Bash y PowerShell"
+  else
+    no "el guard no cubre las dos herramientas de shell" "en Windows PowerShell es la principal"
+  fi
+
+  if [ -f "$P/scripts/guard.sh" ]; then
+    gout="$(bash "$TESTDIR/guard.sh" "$P/scripts/guard.sh" 2>&1)"
+    if [ $? -eq 0 ]; then
+      ok "guard: $(printf '%s' "$gout" | grep -o '[0-9]* PASS' | tail -1) de escenarios (main, secretos, push)"
+    else
+      no "guard: fallan escenarios" "$(printf '%s' "$gout" | grep FAIL | head -3)"
+    fi
+  else
+    no "falta scripts/guard.sh"
+  fi
 fi
 
 # ------------------------------------------------------------------ report --
@@ -204,7 +237,8 @@ cat <<'PENDIENTE'
   1. Un cliente real, en su Windows, sin ayuda, con solo el link del repo.
      Mirá dónde duda, dónde pregunta, dónde abandona.
   2. El flujo completo hasta código andando: pedí una app chica y contá
-     cuántas veces tuvo que decidir algo. Más de 3 checkpoints = falla de diseño.
+     cuántas veces tuvo que decidir algo. Frena al aprobar la épica y en cada
+     resultado; cualquier otra parada sin cambio de alcance = falla de diseño.
   3. Que nunca le pregunte algo que no pueda contestar (framework, base de
      datos, TDD). Si pasa una sola vez, es un bug.
   4. INSTALL.md + /preparar en un Windows limpio: como mucho un reinicio,
