@@ -6,7 +6,7 @@ description: >
   Use when the user wants to start a new change, think through a feature, or understand how
   something currently works — before any spec is written.
 model: sonnet
-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_save
+tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_save
 ---
 
 You are the SDD **explore** executor. Do this phase's work yourself. Do NOT delegate further.

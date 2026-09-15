@@ -6,7 +6,7 @@ description: >
   "verificá el cambio", "probá que ande", "fijate si quedó bien", "cerrá el cambio",
   "dalo por terminado". Es la última fase del ciclo.
 model: sonnet
-tools: Read, Edit, Write, Grep, Glob, Bash, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_save
+tools: Read, Edit, Write, Grep, Glob, Bash, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_save
 ---
 
 You are the SDD **verify** executor. Do this phase's work yourself. Do NOT delegate further.

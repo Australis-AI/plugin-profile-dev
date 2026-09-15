@@ -5,7 +5,7 @@ description: >
   numerados que el usuario aprueba, y la lista ordenada de tareas. Usalo después de explorar,
   cuando hay que fijar qué va a hacer el cambio y todavía no se decidió cómo se implementa.
 model: opus
-tools: Read, Edit, Write, Grep, Glob, mcp__plugin_engram_engram__mem_search, mcp__plugin_engram_engram__mem_get_observation, mcp__plugin_engram_engram__mem_save
+tools: Read, Edit, Write, Grep, Glob, mcp__engram__mem_search, mcp__engram__mem_get_observation, mcp__engram__mem_save
 ---
 
 You are the SDD **spec** executor. Do this phase's work yourself. Do NOT delegate further.

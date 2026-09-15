@@ -1,132 +1,180 @@
 ---
 name: preparar
-description: "Dejar el kit listo para trabajar: instala la memoria, arregla el PATH y verifica todo. Trigger: preparar el kit, terminar la instalación, configurar, no me anda la memoria."
+description: "Dejar la compu lista para trabajar con el kit: nivel, GitHub, firma de git y herramientas. Trigger: preparar el kit, terminar la instalación, configurar, cambiar el nivel, no me anda GitHub."
+argument-hint: "[nivel]"
 license: MIT
 metadata:
   author: australis-ai
-  version: "1.0"
+  version: "2.0"
 ---
 
 # Setup Runbook
 
-You are walking a **non-technical user on Windows** through finishing the installation. They
-already installed this plugin — that is why you exist. Your job is everything that a plugin
-cannot do for itself.
+You finish the installation on this machine. `INSTALL.md` already installed the tools and the
+plugin; you configure what a plugin cannot configure for itself. Run it once per machine, and
+again any time something here breaks.
 
-Speak Spanish, plainly. One step at a time. Never show raw stderr.
+Speak Spanish with voseo, plainly. Never show raw stderr. Instructions below are for you; every
+quoted line in Spanish is what the user sees.
 
-## Absolute Rules — violating any of these is a defect
+Argument: $ARGUMENTS
 
-1. **Never** run with `--dangerously-skip-permissions`, never set `bypassPermissions`, never widen
-   `permissions` in any `settings.json`.
-2. **Never** pipe a remote script into a shell (`curl | bash`, `iwr | iex`). Download to a path you
-   show the user, verify the checksum, and only run it after `--version` succeeds.
-3. **Never** ask the user to hand-edit JSON, YAML, or the PATH.
-4. **Never** disable or pause Windows Defender. A folder exclusion is the only permitted action,
-   and *"seguimos sin memoria"* must be offered as an equally easy choice.
-5. **Never** install Go, Node, Python, or any compiler.
-6. **Always** `--scope user` when installing plugins.
-7. **Never** leave a half state. If a step fails, record it and continue in files-only mode.
-8. **Never** ask a question that needs engineering knowledge.
-9. **Never** require a GitHub account to finish.
-10. **Never** modify the user's global `CLAUDE.md`, `settings.json`, or `.mcp.json`.
+- If the argument is `nivel`, run only **Step 1** (the level question) and **Step 5**, then stop.
+- Otherwise run every step in order.
 
----
+## Tools and shell
 
-## Step 0 — Is anything already done?
+On Windows use the **PowerShell tool** for every command in this runbook, and call tools by
+absolute path when a bare name is not found — a program installed during this session is not on
+this session's PATH until Claude Code restarts:
 
-If the `mem_search` tool exists in this session, memory is already working. Skip to Step 4 and
-just confirm. Do not reinstall.
+| Tool | Absolute path on Windows |
+|---|---|
+| git | `$env:ProgramFiles\Git\cmd\git.exe` |
+| gh | `$env:ProgramFiles\GitHub CLI\gh.exe` |
+| node | `$env:ProgramFiles\nodejs\node.exe` |
+| winget | `$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe` |
 
-## Step 1 — Git
+On macOS or Linux use Bash, and replace the winget step with the one install command for the
+missing tool (`brew install gh`, the distro package, or nodejs.org).
 
-Run `git --version`.
+## Absolute rules — violating any of these is a defect
 
-- Works → *"✅ Git listo."*
-- Fails → *"Te falta Git. Bajalo de git-scm.com/download/win y dale 'Siguiente' a todo. Cuando
-  termine, volvé y escribí `/preparar`."* Then STOP — nothing else works without it.
-
-Git also gives us Git Bash, which the memory system needs. That is why it comes first.
-
-## Step 2 — The memory plugin
-
-Ask once, in plain terms:
-
-> Te propongo instalar la memoria. Sirve para que me acuerde de tu proyecto entre sesiones, así no
-> tenés que explicarme todo de nuevo cada vez. Son dos minutos. ¿Le damos?
->
->   a) Dale
->   b) Ahora no — podés seguir trabajando igual
-
-If (b): write the marker (Step 5), tell them they can run `/preparar` any time, and skip to Step 4.
-
-If (a), run these two, asking permission for each:
-
-```
-claude plugin marketplace add Gentleman-Programming/engram
-claude plugin install engram --scope user
-```
-
-## Step 3 — The memory program
-
-The plugin above is only the wiring. The actual program is a separate download.
-
-1. Find the latest release asset for Windows:
-   `gh release view --repo Gentleman-Programming/engram --json tagName,assets`
-   Look for `engram_<version>_windows_amd64.zip` (or `_arm64` on ARM machines).
-   If `gh` is unavailable, fetch the same information from the GitHub releases API.
-2. Download it **and** `checksums.txt` to a path you show the user, under
-   `%LOCALAPPDATA%\engram\bin`.
-3. **Verify the checksum before extracting.** If it does not match, stop, delete the download, and
-   tell the user the download failed and you are not going to run it. Offer to retry once.
-4. Extract `engram.exe` to `%LOCALAPPDATA%\engram\bin`.
-5. Add that folder to the user's PATH with `setx`, user scope only. Tell them what you did in one
-   plain line.
-6. Verify: `engram --version`.
-
-### If the file disappears or will not run
-
-Windows Defender flags this program because it is not signed by a company. The file is legitimate,
-but Defender does not know that. Offer exactly two paths, equally weighted:
-
-> Windows borró el archivo de la memoria. Pasa porque el programa no está firmado por una empresa
-> — no es que tenga algo malo, es que Windows no lo conoce.
->
->   a) Te muestro los 4 clics para permitirlo y seguimos
->   b) Lo dejamos y trabajamos sin memoria — funciona igual, solo que no me acuerdo entre sesiones
-
-For (a), walk them through adding a **folder exclusion** for `%LOCALAPPDATA%\engram\bin` in
-Windows Security → Virus & threat protection → Manage settings → Exclusions → Add → Folder.
-Four clicks, one folder. Never suggest turning protection off.
-
-For (b), write the marker (Step 5) and move on without a hint of failure in your tone.
-
-## Step 4 — Verify
-
-Run the `/chequeo` flow and show its output.
-
-Then tell them the one thing that actually matters:
-
-> Ahora cerrá Claude Code y abrilo de nuevo. Es necesario para que la memoria se conecte.
-
-After the restart, `mem_search` will exist and memory is live.
-
-## Step 5 — Record the outcome
-
-If memory was declined or failed, create the file `~/.claude/australis/memoria-off` (create the
-directory if needed) with one line explaining which it was. `/chequeo` reads this to tell
-"the user said no" apart from "it broke", so it stops re-offering something already declined.
-
-If memory succeeded, delete that file if it exists.
-
-## Step 6 — Offer the first build
-
-Close with:
-
-> Listo. ¿Querés que hagamos tu primera app juntos ahora? Contame qué te gustaría construir.
+1. **Never** use `--dangerously-skip-permissions`, never set `bypassPermissions`, never widen
+   `permissions` in any settings file.
+2. **Never** pipe a remote script into a shell (`curl | bash`, `iwr | iex`).
+3. **Never** ask the user to hand-edit JSON, YAML, the registry, or the PATH.
+4. **Never** disable or pause Windows Defender or any security product.
+5. **Never** ask for a password, token, or recovery code in the chat. GitHub login happens in the
+   browser.
+6. **Never** ask a question that needs engineering knowledge.
+7. **Never** modify the user's global `CLAUDE.md`, `settings.json`, or `.mcp.json` — with one
+   exception: Step 7 may set `permissions.blockReadsOutsideWorkingDirectories` back to `false`,
+   only after the user says yes to that exact change.
+8. **Never** leave a half state. If a step fails, say which one in one line, finish the others,
+   and let `/chequeo` point at it.
 
 ---
 
-## Sub-command: `/preparar memoria`
+## Step 0 — Read the current state (silent)
 
-Runs Steps 2–5 only. Use it when memory is the only thing broken.
+Run these read-only checks in **one** PowerShell call and keep the results. Do not print them.
+
+- git present: `Get-Command git` or the absolute path exists
+- gh present, and `gh auth status` succeeds
+- node present
+- `git config --global user.name`, `git config --global user.email`, `git config --global core.longpaths`
+- level file: `$HOME\.australis\nivel` (content `aprendiz` or `dev`)
+- read block: `$HOME\.claude\settings.json` has `permissions.blockReadsOutsideWorkingDirectories` = `true`
+
+Skip every later question whose answer is already known.
+
+## Step 1 — One message with every question
+
+Send a **single** message. Include only the parts that still apply:
+
+> Vamos a dejar tu compu lista. Te hago todas las preguntas juntas:
+>
+> **1. ¿Cómo querés que trabajemos?**
+>   a) Estoy aprendiendo — explicame cada paso
+>   b) Ya programo — andá directo
+>
+> **2. ¿Ya tenés cuenta de GitHub?** (es donde se guarda tu trabajo y su historia) — sí / no
+>
+> Dos avisos antes de empezar:
+> - Claude Code te va a mostrar carteles pidiendo permiso para correr comandos. Son normales:
+>   leé qué dice y aceptá.
+> - En algún momento te va a preguntar si puede leer archivos del kit que están fuera de esta
+>   carpeta. Elegí la opción que **permite** seguir leyendo. Nunca "Block from now on": eso
+>   rompe el kit.
+[If tools are missing, add the Step 2 notice here and ask for the grouped permission in this same message.]
+
+Wait for the answer. Question 1 is skipped when the level file exists (except with the `nivel`
+argument). Question 2 is skipped when `gh auth status` already succeeds.
+
+## Step 2 — Missing tools (only if Git, GitHub CLI, or Node is missing)
+
+`INSTALL.md` normally installed these. A machine that installed an older version of the kit may
+lack them. Ask for **one** grouped permission, inside the Step 1 message:
+
+> Te faltan herramientas: [Git / GitHub CLI / Node]. Las instalo ahora. Windows te va a pedir
+> permiso de administrador hasta [N] veces: tocá "Sí". Si no ves la ventana, mirá el escudo que
+> titila en la barra de tareas. ¿Dale?
+
+Then install each missing one, one PowerShell call each, timeout 600000:
+
+```
+& "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" install --id <Id> -e --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity
+```
+
+| Tool | Id | Success check |
+|---|---|---|
+| Git | `Git.Git` | `Test-Path "$env:ProgramFiles\Git\cmd\git.exe"` |
+| GitHub CLI | `GitHub.cli` | `Test-Path "$env:ProgramFiles\GitHub CLI\gh.exe"` |
+| Node LTS | `OpenJS.NodeJS.LTS` | `Test-Path "$env:ProgramFiles\nodejs\node.exe"` |
+
+Judge success by the path check, not by winget's exit code. If winget itself is missing, say:
+*"Tu Windows no tiene el instalador de aplicaciones. Abrí Microsoft Store, buscá 'App Installer',
+instalalo y escribí `/preparar` de nuevo."* and continue with the steps that do not need it.
+
+Remember that something was installed: Step 8 needs it.
+
+## Step 3 — GitHub
+
+Skip if `gh auth status` already succeeds.
+
+1. If the user has no account: open `https://github.com/signup` with `Start-Process` and say
+   *"Creá tu cuenta en la página que se abrió. Cuando termines, escribí listo."* Wait.
+2. Start the login as a **background** command (it never finishes until the user authorizes):
+   `& "<gh>" auth login --hostname github.com --git-protocol https --web --clipboard`
+3. Read its output until the one-time code (`XXXX-XXXX`) appears. Then open
+   `https://github.com/login/device` with `Start-Process` and say:
+   *"Se abrió GitHub. Pegá el código **XXXX-XXXX** (ya está copiado: Ctrl+V), tocá Continuar y
+   después Authorize. No hace falta que escribas nada acá."*
+4. Wait for the background command to finish. If the code expires, start it once more. If it
+   fails again, say it in one line and move on.
+5. Run `gh auth status` and `gh auth setup-git`.
+
+## Step 4 — Git signature and long paths
+
+- If `user.email` is empty and gh is logged in: read the account with
+  `gh api user --jq '.id,.login,.name'` and set
+  - `git config --global user.name "<name, or login if name is empty>"`
+  - `git config --global user.email "<id>+<login>@users.noreply.github.com"`
+
+  Tell the user in one line: *"Tus cambios van a quedar firmados con tu cuenta de GitHub."*
+- If `user.email` already has a value, keep it.
+- If `core.longpaths` is not `true`: `git config --global core.longpaths true`.
+
+## Step 5 — Level
+
+Write the level chosen in Step 1:
+
+```
+New-Item -ItemType Directory -Force "$HOME\.australis" | Out-Null
+Set-Content -Path "$HOME\.australis\nivel" -Value "<aprendiz|dev>" -Encoding ascii
+```
+
+Confirm in one line: *"Listo: modo aprendiz."* or *"Listo: modo directo."*
+
+## Step 6 — Updates
+
+Updates of this kit do not arrive on their own until you enable them. Say:
+
+> Para que el kit se actualice solo: escribí `/plugin`, entrá en **Marketplaces**, elegí
+> **australis-dev** y tocá **Enable auto-update**. Es una sola vez.
+
+## Step 7 — Read block (only if detected in Step 0)
+
+> Antes bloqueaste que lea archivos fuera de esta carpeta, y eso deja al kit sin sus
+> instrucciones. ¿Lo vuelvo a permitir? Es una sola línea de tu configuración de Claude.
+
+Only on yes, set `permissions.blockReadsOutsideWorkingDirectories` to `false` in
+`$HOME\.claude\settings.json`, preserving every other key.
+
+## Step 8 — Close
+
+- If anything was installed in Step 2:
+  > Instalé herramientas nuevas, así que hace falta reiniciar una vez. Cerrá VS Code entero
+  > (Archivo → Salir) o la terminal, abrilo de nuevo y escribí `/chequeo`.
+- Otherwise run the `/chequeo` checks now and show their result.
