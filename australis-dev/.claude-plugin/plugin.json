@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "australis-dev",
   "displayName": "Australis Dev",
-  "version": "2.1.0",
-  "description": "La metodología de desarrollo de Australis: entender, acordar, construir y verificar. Cinco fases delegadas, tres puntos de aprobación, y branches gestionadas solas para que nunca escribas en main.",
+  "version": "3.2.0",
+  "description": "La metodología de desarrollo de Australis, operada por un dev senior que acompaña y enseña: épica e issues en GitHub, una rama por issue, revisión, pull request y deploy. Nunca se escribe en main.",
   "author": {
     "name": "Australis AI"
   },

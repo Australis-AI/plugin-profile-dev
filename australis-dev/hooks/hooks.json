@@ -1,5 +1,5 @@
 {
-  "description": "Australis dev — tells the session which level this machine is set to",
+  "description": "Australis dev — level line at session start; guard against commits on the default branch and committed secrets",
   "hooks": {
     "SessionStart": [
       {
@@ -9,6 +9,18 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/nivel.sh\"",
             "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/guard.sh\"",
+            "timeout": 15
           }
         ]
       }

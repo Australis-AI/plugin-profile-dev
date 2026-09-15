@@ -81,6 +81,9 @@ Send a **single** message. Include only the parts that still apply:
 >
 > **2. ¿Ya tenés cuenta de GitHub?** (es donde se guarda tu trabajo y su historia) — sí / no
 >
+> **3. Si estás aprendiendo: ¿cómo se llama tu primera app?** Un nombre corto, por ejemplo
+> `mis-gastos`. Si no sabés todavía, poné `mi-primera-app`.
+>
 > Dos avisos antes de empezar:
 > - Claude Code te va a mostrar carteles pidiendo permiso para correr comandos. Son normales:
 >   leé qué dice y aceptá.
@@ -90,7 +93,10 @@ Send a **single** message. Include only the parts that still apply:
 [If tools are missing, add the Step 2 notice here and ask for the grouped permission in this same message.]
 
 Wait for the answer. Question 1 is skipped when the level file exists (except with the `nivel`
-argument). Question 2 is skipped when `gh auth status` already succeeds.
+argument). Question 2 is skipped when `gh auth status` already succeeds. Question 3 only applies at
+`aprendiz`, and is skipped when `$HOME\apps` already has a folder with a `.git` inside.
+
+Turn the app name into a slug: lowercase, no accents, spaces to hyphens, only `a-z0-9-`.
 
 ## Step 2 — Missing tools (only if Git, GitHub CLI, or Node is missing)
 
@@ -172,9 +178,34 @@ Updates of this kit do not arrive on their own until you enable them. Say:
 Only on yes, set `permissions.blockReadsOutsideWorkingDirectories` to `false` in
 `$HOME\.claude\settings.json`, preserving every other key.
 
-## Step 8 — Close
+## Step 8 — First app folder (aprendiz only, GitHub connected)
 
-- If anything was installed in Step 2:
-  > Instalé herramientas nuevas, así que hace falta reiniciar una vez. Cerrá VS Code entero
-  > (Archivo → Salir) o la terminal, abrilo de nuevo y escribí `/chequeo`.
-- Otherwise run the `/chequeo` checks now and show their result.
+Create the project where npm works (never inside OneDrive), born on GitHub and cloned, so `main`
+exists before any commit and the remote is configured from the first session in that folder:
+
+```
+New-Item -ItemType Directory -Force "$HOME\apps" | Out-Null
+Set-Location "$HOME\apps"
+& "<gh>" repo view "<login>/<slug>" *> $null
+# if it does not exist:
+& "<gh>" repo create "<login>/<slug>" --private --add-readme --gitignore Node --clone
+# if it already exists and is not cloned here:
+& "<gh>" repo clone "<login>/<slug>"
+```
+
+At `aprendiz`, this is where you teach `repositorio` for the first time.
+
+## Step 9 — Close
+
+- `aprendiz` with the app folder created:
+  > Listo, tu compu está preparada y tu primera app ya tiene su lugar.
+  > [If anything was installed in Step 2: Primero cerrá VS Code entero (Archivo → Salir) y abrilo de nuevo.]
+  > Ahora: **Archivo → Abrir carpeta** → `%USERPROFILE%\apps\<slug>` → **Sí, confío en los
+  > autores**. Ahí escribí `/nuevo` y contame qué querés que haga tu app.
+
+  In a terminal instead of VS Code: `cd ~\apps\<slug>` and then `claude`.
+- `dev`, or when the folder could not be created:
+  - If anything was installed in Step 2:
+    > Instalé herramientas nuevas, así que hace falta reiniciar una vez. Cerrá VS Code entero
+    > (Archivo → Salir) o la terminal, abrilo de nuevo y escribí `/chequeo`.
+  - Otherwise run the `/chequeo` checks now and show their result.

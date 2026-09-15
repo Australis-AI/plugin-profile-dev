@@ -1,6 +1,7 @@
 ---
 name: work-unit-commits
-description: "Agrupar los cambios en commits que se puedan revisar de a uno, con sus tests y su documentación. Trigger: partir los commits, ordenar los cambios, cómo agrupo esto."
+description: "Agrupar los cambios en commits que se puedan revisar de a uno, con sus tests y su documentación. Uso manual: /australis-dev:work-unit-commits."
+disable-model-invocation: true
 license: Apache-2.0
 metadata:
   author: australis-ai
@@ -17,7 +18,6 @@ Use it for:
 - Preparing commits before opening a PR.
 - Turning a large change into chained or stacked PRs.
 - Keeping reviewer cognitive load healthy.
-- Applying SDD tasks without accidentally producing a PR above 400 changed lines.
 
 ## Critical Rules
 
@@ -29,7 +29,7 @@ Use it for:
 | Keep docs with the user-visible change | Docs belong with the feature or workflow they explain. |
 | Tell a story | A reviewer should understand why each commit exists from its diff and message. |
 | Future PR-ready | Each commit should be a candidate chained PR when the change grows. |
-| SDD workload guard | If SDD tasks forecast a >400-line change, group commits into chained PR slices before implementation. |
+| Separate add and commit | Run `git add` and `git commit` as separate commands; the kit's guard inspects what is staged. |
 
 ## Work Unit Checklist
 
@@ -59,15 +59,9 @@ Use work-unit commits as the foundation for chained PRs:
 3. Commit it with a Conventional Commit message.
 4. If the PR approaches 400 changed lines, promote commits or groups of commits into chained PRs.
 
-## SDD Relationship
+## Issue Relationship
 
-When `sdd-spec` produces a Review Workload Forecast:
-
-- Low risk: keep work-unit commits inside one PR.
-- Medium risk: commit by work unit and monitor changed lines before PR creation.
-- High risk: follow SDD `delivery_strategy` — ask on `ask-on-risk`, auto-slice on `auto-chain`, require `size:exception` on over-budget `single-pr`, or record accepted `size:exception` on `exception-ok`.
-
-Each SDD work unit should map cleanly to a commit or PR with:
+In the Australis method one issue is one PR. Each work unit inside it maps to a commit with:
 
 - clear start state,
 - clear finished state,

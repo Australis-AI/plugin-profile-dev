@@ -1,10 +1,9 @@
 # Strict TDD Module — Verify Phase
 
-> **Activation is automatic and silent.** This module applies only when `strict_tdd` is `true`
-> in `.australis/proyecto.json` — the flag the explore phase auto-detects and caches — AND a
-> test runner exists in the project. Never ask the user whether TDD is in play; never announce
-> which mode you are in. If you are reading this, both conditions already held. Follow every
-> instruction below.
+> **Activation is automatic and silent.** This module applies only when your prompt says
+> `STRICT TDD MODE IS ACTIVE` — the orchestrator adds it when `contexto.md` has a `comando_test`.
+> Never ask the user whether TDD is in play. If you are reading this, the condition held. Follow
+> every instruction below.
 
 ## TDD Verification Philosophy
 
@@ -12,7 +11,7 @@ When strict TDD is active, verification goes beyond "does the code work?" to "wa
 
 ## Step 5a: TDD Compliance Check (includes Assertion Quality Audit)
 
-Read `.australis/cambios/<slug>/apply-progress.md` (the `apply-progress` artifact) and verify that TDD was actually followed:
+Read `.australis/trabajo/<N>/apply-progress.md` (the `apply-progress` artifact) and verify that TDD was actually followed:
 
 ```
 Read apply-progress artifact:
@@ -71,9 +70,9 @@ Scan test files created/modified by this change:
 │   ├── E2E: {N} tests across {N} files
 │   └── Total: {N} tests
 │
-├── Cross-reference with the tooling cached in `.australis/proyecto.json`:
-│   ├── If integration tests exist but the tools are not cached → how?
-│   ├── If E2E tests exist but the tools are not cached → how?
+├── Cross-reference with the tooling the project actually has (dependencies and config):
+│   ├── If integration tests exist but no integration tooling is installed → how?
+│   ├── If E2E tests exist but no E2E tooling is installed → how?
 │   └── Flag: WARNING if tests use tools not present in the cached tooling
 │
 └── For each spec scenario: note which layer covers it
@@ -86,7 +85,7 @@ Scan test files created/modified by this change:
 When coverage tool is available, report coverage for CHANGED files specifically:
 
 ```
-IF a coverage tool is cached in `.australis/proyecto.json`:
+IF the project has a coverage tool (a `coverage` script or coverage config):
 ├── Run: {test_command} --coverage (or equivalent)
 ├── Parse the coverage report
 ├── Filter to ONLY files created or modified in this change
@@ -116,7 +115,7 @@ IF coverage tool NOT available:
 Run quality checks ONLY on changed files, ONLY if tools are available:
 
 ```
-Read the quality tooling cached in `.australis/proyecto.json`:
+Read the quality commands in `contexto.md` (`comando_lint`, `comando_build`):
 
 IF linter available:
 ├── Run linter on changed files only
@@ -261,8 +260,8 @@ If zero issues found, report: "**Assertion quality**: ✅ All assertions verify 
 
 ## Rules (Strict TDD Verify specific)
 
-- NEVER ask the user whether strict TDD should apply — `.australis/proyecto.json` already answered
-- NEVER surface any of this to the user: it belongs in the persisted verification report only. No test names, no coverage numbers, no assertion listings, no raw tool output in the conversation. The user still sees only the *Esto anda* checkpoint
+- NEVER ask the user whether strict TDD should apply — the orchestrator's prompt already answered
+- NEVER put any of this in the gate block: it belongs in the technical sections of `verify.md`. No test names, no coverage numbers, no assertion listings, no raw tool output in what the user sees
 - ALWAYS check the TDD Cycle Evidence table from apply-progress — it's the primary artifact
 - ALWAYS cross-reference reported test files against actual execution — don't trust the report blindly
 - ALWAYS run the Assertion Quality Audit (Step 5f) — trivial tests are WORSE than missing tests

@@ -1,6 +1,7 @@
 ---
 name: chained-pr
-description: "Partir un cambio grande en varios pull requests encadenados, para que se pueda revisar bien. Trigger: esto quedó muy grande, partir el cambio, PRs encadenados, más de 400 líneas."
+description: "Partir un cambio grande en varios pull requests encadenados, para que se pueda revisar bien. Uso manual: /australis-dev:chained-pr."
+disable-model-invocation: true
 license: Apache-2.0
 metadata:
   author: australis-ai
@@ -9,7 +10,7 @@ metadata:
 
 ## Activation Contract
 
-Load this skill when a planned PR may exceed **400 changed lines**, SDD forecasts `400-line budget risk: High` or `Chained PRs recommended: Yes`, or the user asks for chained/stacked PRs, review slices, or reviewer-load control.
+Use this skill when the user asks for chained or stacked PRs, review slices, or reviewer-load control. In the Australis method the first answer to a large change is a smaller issue: split the issue before splitting the PR.
 
 ## Hard Rules
 
@@ -30,12 +31,11 @@ Load this skill when a planned PR may exceed **400 changed lines**, SDD forecast
 | PR >400, each slice can land independently | Use Stacked PRs to main. |
 | PR >400, feature must integrate before main | Use Feature Branch Chain with tracker. |
 | Generated/vendor/migration diff cannot split cleanly | Ask maintainer for `size:exception`. |
-| SDD provides `delivery_strategy` | Follow it before apply/PR creation. |
 
 ## Execution Steps
 
 1. Estimate changed lines and identify independent work units.
-2. Ask for a chain strategy when none is cached and the budget is exceeded.
+2. Ask the user which chain strategy to use when the budget is exceeded.
 3. Create branches/PRs using the chosen strategy only.
 4. Add Chain Context to each PR without replacing the repo PR template.
 5. Verify each PR independently: CI/tests/docs/manual checks, rollback scope, and clean diff.

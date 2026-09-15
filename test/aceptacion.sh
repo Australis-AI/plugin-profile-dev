@@ -16,6 +16,7 @@
 set -u
 
 REPO_SLUG="${TEST_SOURCE:-Australis-AI/plugin-profile-dev}"
+TESTDIR="$(cd "$(dirname "$0")" && pwd)"   # absolute: later steps cd elsewhere
 PLUGIN="australis-dev@australis-dev"
 
 # Short paths on purpose: Windows caps paths at 260 characters unless
@@ -120,6 +121,11 @@ else
   [ -z "$leak" ] && ok "no depende de la máquina del autor" \
     || no "depende de rutas del autor:" "$leak"
 
+  # Clients receive this package: Australis server addresses must never ship in it.
+  infra="$(grep -rl -E '154\.12\.246\.59|australisai\.xyz' "$P" 2>/dev/null | head -3)"
+  [ -z "$infra" ] && ok "no expone la infraestructura de Australis" \
+    || no "aparecen direcciones de la infraestructura de Australis:" "$infra"
+
   # Engram is optional: agents may use its tools only under the name a direct
   # MCP registration exposes. The plugin-namespaced name never existed.
   stale="$(grep -rl 'mcp__plugin_engram' "$P" 2>/dev/null | head -3)"
@@ -128,6 +134,20 @@ else
 
   [ ! -e "$P/scripts/memory-check.sh" ] && ok "sin el chequeo de memoria viejo" \
     || no "sigue memory-check.sh"
+
+  # v2 left a file-based flow and OpenSpec remnants that no longer exist.
+  stale="$(grep -rlE 'ADDED Requirements|REQ-0[0-9]|Review Workload|\.australis/cambios|\.atl/|proyecto\.json|skill-registry|delivery_strategy|ORCHESTRATOR GATE' "$P" 2>/dev/null | head -3)"
+  [ -z "$stale" ] && ok "sin restos del flujo viejo" || no "quedan restos del flujo viejo:" "$stale"
+
+  ST="$P/output-styles/australis-dev.md"
+  if [ -f "$ST" ]; then
+    grep -q '^force-for-plugin: true' "$ST" && ok "la persona se aplica sola (force-for-plugin)" \
+      || no "el style no tiene force-for-plugin: true"
+    grep -q '^keep-coding-instructions: true' "$ST" && ok "la persona conserva las reglas de código" \
+      || no "el style no tiene keep-coding-instructions: true" "Claude pierde sus instrucciones de ingeniería"
+  else
+    no "falta el output style de la persona"
+  fi
 
   MK="$H/.claude/plugins/marketplaces/australis-dev/.claude-plugin/marketplace.json"
   # A local TEST_SOURCE is read in place, not cloned into marketplaces/.
@@ -154,6 +174,12 @@ if [ -x "$P/scripts/nivel.sh" ]; then
   printf '%s' "$out" | grep -q 'nivel del usuario = dev' \
     && ok "con nivel elegido: lo informa (tolera CRLF)" || no "no informa el nivel" "$out"
 
+  printf 'aprendiz\n' > "$H/.australis/nivel"
+  out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"
+  mat="$(printf '%s' "$out" | sed -n 's/^Material para enseñar conceptos: //p')"
+  [ -n "$mat" ] && [ -f "$mat" ] && ok "en aprendiz apunta al material para enseñar, y existe" \
+    || no "en aprendiz no apunta a un material que exista" "$out"
+
   printf 'cualquiera\n' > "$H/.australis/nivel"
   out="$(env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/nivel.sh" 2>&1)"; rc=$?
   [ $rc -eq 0 ] && [ -z "$out" ] && ok "nivel inválido: no inventa nada" \
@@ -161,6 +187,17 @@ if [ -x "$P/scripts/nivel.sh" ]; then
   rm -rf "$H/.australis"
 else
   no "falta el hook de nivel (scripts/nivel.sh)"
+fi
+
+if [ -f "$P/scripts/contexto.sh" ]; then
+  empty="$(mktemp -d)"
+  out="$(cd "$empty" && env PATH="$CLEAN_PATH" HOME="$H" bash "$P/scripts/contexto.sh" 2>&1)"; rc=$?
+  rm -rf "$empty"
+  [ $rc -eq 0 ] && printf '%s' "$out" | grep -q '^repo: no' \
+    && ok "contexto en una carpeta vacía: responde sin fallar" \
+    || no "contexto falla en una carpeta vacía" "$(printf '%s' "$out" | tail -3)"
+else
+  no "falta scripts/contexto.sh"
 fi
 
 # ------------------------------------------------------------------ safety --
@@ -176,6 +213,44 @@ if [ -d "$P" ]; then
 
   grep -rqi 'default branch\|rama por defecto\|protected branch' "$P" 2>/dev/null \
     && ok "hay guarda de rama protegida" || no "no encuentro la guarda de rama"
+
+  if grep -q '"matcher": "Bash|PowerShell"' "$P/hooks/hooks.json" 2>/dev/null; then
+    ok "el guard mira Bash y PowerShell"
+  else
+    no "el guard no cubre las dos herramientas de shell" "en Windows PowerShell es la principal"
+  fi
+
+  if [ -f "$P/scripts/guard.sh" ]; then
+    gout="$(bash "$TESTDIR/guard.sh" "$P/scripts/guard.sh" 2>&1)"
+    if [ $? -eq 0 ]; then
+      ok "guard: $(printf '%s' "$gout" | grep -o '[0-9]* PASS' | tail -1) de escenarios (main, secretos, push)"
+    else
+      no "guard: fallan escenarios" "$(printf '%s' "$gout" | grep FAIL | head -3)"
+    fi
+  else
+    no "falta scripts/guard.sh"
+  fi
+fi
+
+# --------------------------------------------------------------- new app --
+if [ "${TEST_SCAFFOLD:-0}" = "1" ]; then
+  head_ "5. App nueva (TEST_SCAFFOLD=1: necesita red y Node)"
+  APP="${TEST_APP:-C:/t/acc-app}"
+  rm -rf "$APP"; mkdir -p "$APP/.australis"
+  ( cd "$APP" && git init -q -b main && printf '# demo\n' > README.md && printf 'node_modules\n' > .gitignore \
+    && echo borrador > .australis/borrador.md )
+  sout="$(cd "$APP" && bash "$P/scripts/scaffold-web.sh" demo-app 2>&1)"
+  printf '%s' "$sout" | grep -q SCAFFOLD_OK && ok "scaffold completo" || no "el scaffold falló" "$(printf '%s' "$sout" | tail -5)"
+  [ -f "$APP/.australis/borrador.md" ] && ok "respeta lo que ya había en .australis" || no "pisó .australis"
+  grep -qxF '.env*' "$APP/.gitignore" && grep -qxF '!.env.example' "$APP/.gitignore" \
+    && ok ".gitignore deja afuera las claves" || no ".gitignore no excluye .env*"
+  grep -q '^Stack: australis' "$APP/README.md" && ok "README marca el stack" || no "README sin la línea Stack"
+  (cd "$APP" && npm test >/dev/null 2>&1) && ok "npm test pasa" || no "npm test falla"
+  (cd "$APP" && npm run lint >/dev/null 2>&1) && ok "npm run lint pasa" || no "npm run lint falla"
+  (cd "$APP" && npm run build >/dev/null 2>&1) && ok "npm run build pasa" || no "npm run build falla"
+  ctx="$(cd "$APP" && bash "$P/scripts/contexto.sh" 2>/dev/null)"
+  printf '%s' "$ctx" | grep -q '^comando_test: npm test' && printf '%s' "$ctx" | grep -q '^stack: australis' \
+    && ok "contexto detecta el stack y el comando de test" || no "contexto no detecta el stack"
 fi
 
 # ------------------------------------------------------------------ report --
@@ -188,7 +263,8 @@ cat <<'PENDIENTE'
   1. Un cliente real, en su Windows, sin ayuda, con solo el link del repo.
      Mirá dónde duda, dónde pregunta, dónde abandona.
   2. El flujo completo hasta código andando: pedí una app chica y contá
-     cuántas veces tuvo que decidir algo. Más de 3 checkpoints = falla de diseño.
+     cuántas veces tuvo que decidir algo. Frena al aprobar la épica y en cada
+     resultado; cualquier otra parada sin cambio de alcance = falla de diseño.
   3. Que nunca le pregunte algo que no pueda contestar (framework, base de
      datos, TDD). Si pasa una sola vez, es un bug.
   4. INSTALL.md + /preparar en un Windows limpio: como mucho un reinicio,

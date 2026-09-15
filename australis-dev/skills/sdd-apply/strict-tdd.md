@@ -1,14 +1,13 @@
 # Strict TDD Module — Apply Phase
 
-> **Activation is automatic and silent.** This module applies only when `strict_tdd` is `true` in
-> `.australis/proyecto.json` — the flag `explore` auto-derives from "the project already has a
-> working test runner" — AND `commands.test` in that same file is not `null`. Never ask the user
-> whether TDD is in play; never announce which mode you are in. If you are reading this, both
-> conditions already held. Follow every instruction below.
+> **Activation is automatic and silent.** This module applies only when your prompt says
+> `STRICT TDD MODE IS ACTIVE` — the orchestrator adds it when `contexto.md` has a `comando_test`.
+> Never ask the user whether TDD is in play. If you are reading this, the condition held. Follow
+> every instruction below.
 
-This module **replaces Step 6** of `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/SKILL.md`. Everything
-else in that skill — branch discipline, reading the contract, merging previous progress, marking
-`[x]`, writing `apply-progress.md`, the return envelope — still applies unchanged.
+This module **replaces the implementation part of Step 3** of
+`${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/SKILL.md`. Everything else in that skill — branch check,
+tasks, commits per work unit, writing `apply-progress.md`, the return envelope — still applies.
 
 ## TDD Philosophy
 
@@ -95,7 +94,7 @@ FOR EACH TASK:
 
 ## Choosing Test Layer
 
-Read `test_runner.layers` from `.australis/proyecto.json` — `explore` cached which layers this project actually has (`unit`, `integration`, `e2e`). A layer marked `false`, or an absent `test_runner` block, means the layer is unavailable. Then choose the layer per task:
+Find which layers this project actually has by looking at its dependencies and config: unit (the runner itself), integration (e.g. Testing Library), e2e (e.g. Playwright or Cypress config). `explore.md` records it when explore ran. A layer with no tooling is unavailable. Then choose the layer per task:
 
 ```
 Determine test layer by WHAT the task does:
@@ -126,9 +125,9 @@ The test command is already resolved. Do not re-detect it.
 
 ```
 Read the test command from:
-├── `.australis/proyecto.json` → commands.test        (the only source)
-├── The orchestrator's prompt, when it stated one     (agrees with the above)
-└── A `null` there means the project has no test runner
+├── The orchestrator's prompt: "Test runner: <command>"   (the only source)
+├── `contexto.md` → comando_test                         (agrees with the above)
+└── `ninguno` there means the project has no test runner
     └── which means Strict TDD is NOT active and you should not be in this module
 
 When executing tests during TDD:
@@ -185,7 +184,7 @@ BEFORE touching production code:
 
 ## Progress Report Extension
 
-When Strict TDD is active, `.australis/cambios/{change-name}/apply-progress.md` MUST include these two sections. `verify` reads them from that file — a missing evidence table is flagged CRITICAL:
+When Strict TDD is active, `.australis/trabajo/<N>/apply-progress.md` MUST include these two sections. `verify` reads them from that file — a missing evidence table is flagged CRITICAL:
 
 ```markdown
 ### TDD Cycle Evidence

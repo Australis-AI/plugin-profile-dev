@@ -47,54 +47,67 @@ La mayoría de las veces no hace falta ningún comando: le decís qué querés c
 
 | Comando | Para qué |
 |---|---|
-| `/nuevo` | Arrancar algo nuevo — explora el proyecto y arma el plan que vas a aprobar |
-| `/construir` | Construir lo que ya acordaron y verificar que ande |
-| `/seguir` | Retomar donde quedaste, en otra sesión |
-| `/juzgar` | Revisión adversarial: dos revisores ciegos sobre el mismo código |
+| `/nuevo` | Arrancar algo nuevo: entendemos qué querés, armamos la épica y la aprobás |
+| `/construir` | Construir el próximo paso de la épica y mostrarte que anda |
+| `/seguir` | Retomar donde quedaste, en otra sesión o en otra compu |
+| `/publicar` | Poner tu app en internet (la primera vez te guío; después se publica sola) |
+| `/juzgar` | Revisión a fondo: dos revisores ciegos sobre el mismo cambio |
 | `/preparar` | Dejar la compu lista (una vez); `/preparar nivel` cambia cómo trabajamos |
 | `/chequeo` | Ver si algo se rompió, y qué hacer exactamente |
 
-### El flujo
+### El método
 
 ```
-entender ──▶ acordar ──▶ diseñar ──▶ construir ──▶ verificar
-    │            │                                     │
-    ▼            ▼                                     ▼
-"Esto entendí"  "Esto va a hacer"                "Esto anda"
+entender ─▶ acordar ─▶ construir ─▶ probar ─▶ integrar ─▶ publicar
+            (épica)    (un issue)   "Esto anda"  (PR)
 ```
 
-Son **tres momentos** en los que se detiene y te pregunta. El resto corre solo.
+Es la forma de trabajar de un equipo profesional, y el kit la opera por vos:
 
-El punto clave: la lista numerada que aprobás en *"Esto va a hacer"* es la misma lista, palabra
-por palabra, que vuelve al final en *"Esto anda"* con un ✅ o un ❌ por ítem. Podés leer el
-reporte de verificación porque aprobaste cada línea diez minutos antes.
+1. **Entender.** Te hago unas pocas preguntas sobre qué querés lograr y para quién.
+2. **Acordar.** Armo una **épica** en GitHub: el objetivo y la lista de pasos. Cada paso es un
+   **issue** con su "listo cuando". La aprobás una vez.
+3. **Construir.** Cada issue se hace en su propia **rama**, con pruebas y una revisión automática
+   hecha por alguien que no escribió el código.
+4. **Probar.** Te muestro cada "listo cuando" con ✅ o ❌ y su evidencia, y la app andando para
+   que la pruebes.
+5. **Integrar.** Si está bien, lo sumo a la versión principal con un **pull request**. Nunca se
+   escribe directo en `main`.
+6. **Publicar.** La app sale a internet siempre desde la versión principal.
 
-### Qué deja en tu proyecto
+Hay **dos momentos** en los que frena y te pregunta: al aprobar la épica y al ver cada resultado.
+Si en el medio aparece algo que cambia lo acordado, también frena.
 
-```
-.australis/
-├── proyecto.md          lo que se sabe del proyecto, acumulado
-├── cambios/<nombre>/    el cambio en curso: plan, tareas, verificación
-└── hecho/               los cambios cerrados
-```
+### Cómo te habla
 
-Son archivos de texto. Los podés abrir, leer y versionar en git. No hay base de datos escondida.
+Al preparar la compu elegís el nivel:
 
-### Ramas
+- **Aprendiendo:** nombra cada etapa, te explica cada concepto la primera vez que aparece (rama,
+  commit, pull request…) y nunca te pregunta cosas técnicas: las decide y te dice por qué.
+- **Ya programo:** va directo, te muestra las decisiones técnicas y te pregunta cuando hace falta.
 
-Nunca escribe en `main`. Antes de tocar código crea `feat/<nombre>` y te lo dice en una línea.
-Los commits siguen [conventional commits](https://www.conventionalcommits.org/).
+En los dos niveles hay cosas que no se negocian: no se escribe en `main`, no se sube una clave, no
+se integra algo que rompe pruebas y no se da nada por terminado sin evidencia.
+
+### Dónde queda tu trabajo
+
+- **En GitHub:** la épica, los issues, los pull requests y toda la historia.
+- **En tu repo:** el código y la documentación que perdura (README, decisiones importantes).
+- **En `.australis/`:** archivos de trabajo temporales del paso en curso. No se suben a GitHub.
 
 ## Actualizar
+
+Lo más simple: en Claude Code escribí `/plugin`, entrá en **Marketplaces**, elegí
+**australis-dev** y activá **Enable auto-update**. A mano:
 
 ```bash
 claude plugin marketplace update australis-dev
 claude plugin update australis-dev@australis-dev
 ```
 
-## Prestárselo a alguien que no programa
+## Si otra persona usa tu compu
 
-Todo el módulo es un interruptor:
+`/preparar nivel` cambia cómo trabaja el kit. Para apagarlo del todo:
 
 ```bash
 claude plugin disable australis-dev@australis-dev
