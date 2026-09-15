@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "australis-dev",
   "displayName": "Australis Dev",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "La metodología de desarrollo de Australis, operada por un dev senior que acompaña y enseña: épica e issues en GitHub, una rama por issue, revisión, pull request y deploy. Nunca se escribe en main.",
   "author": {
     "name": "Australis AI"

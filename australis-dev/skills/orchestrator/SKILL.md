@@ -169,7 +169,17 @@ epic adds it to the epic's task list.
 
 ### 4. Route the issue
 
-Judge it now, not when it was written:
+**Base of a new app.** When the issue is *"Base del proyecto"* and there is no `package.json`,
+follow the **Issue #1** section of `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` in this
+thread instead of routing to explore, design and apply. Verify, review, PR and the gate run as
+usual.
+
+**Saved data.** When an issue needs data that survives closing the app and `.env.local` has no
+`NEXT_PUBLIC_SUPABASE_URL`, connect Supabase first with
+`${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/references/supabase.md`. Migrations written by apply
+are applied and live-checked **before** verify.
+
+Otherwise, judge the route now, not when the issue was written:
 
 | Route | When |
 |---|---|
@@ -187,8 +197,9 @@ make, stop and ask before building. That is the only stop before the result.
 Delegate with the model table below. Every launch passes: the issue number, the absolute path of
 `.australis/trabajo/<N>/`, the default branch, and under `## Skills to load before work` the
 exact paths `${CLAUDE_PLUGIN_ROOT}/skills/dev-context/SKILL.md` and
-`${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`. When `comando_test` is not `ninguno`,
-add `STRICT TDD MODE IS ACTIVE. Test runner: <comando_test>.`
+`${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`, plus
+`${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` when the context says `stack: australis`.
+When `comando_test` is not `ninguno`, add `STRICT TDD MODE IS ACTIVE. Test runner: <comando_test>.`
 
 - **explore** → `explore.md`, including whether design is needed.
 - **design** (when needed) → `design.md`. At `dev`, show its Decisions table (chosen and rejected,

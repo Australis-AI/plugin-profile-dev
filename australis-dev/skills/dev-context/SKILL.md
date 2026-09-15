@@ -23,6 +23,9 @@ to the user (that is the output style: level, non-negotiables, cost protocol).
 - **Frontend:** one responsibility per component; separate what fetches data from what renders it.
 - **Follow the project.** In an existing repo, its established patterns beat generic best
   practice. Change a pattern only on purpose, in its own issue.
+- **Australis stack.** When the README says `Stack: australis`, the stack reference defines the
+  structure and data rules, and takes precedence over this section. Technical constraints written
+  in the issue take precedence over both.
 
 ## Testing
 

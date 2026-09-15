@@ -227,6 +227,27 @@ if [ -d "$P" ]; then
   fi
 fi
 
+# --------------------------------------------------------------- new app --
+if [ "${TEST_SCAFFOLD:-0}" = "1" ]; then
+  head_ "5. App nueva (TEST_SCAFFOLD=1: necesita red y Node)"
+  APP="${TEST_APP:-C:/t/acc-app}"
+  rm -rf "$APP"; mkdir -p "$APP/.australis"
+  ( cd "$APP" && git init -q -b main && printf '# demo\n' > README.md && printf 'node_modules\n' > .gitignore \
+    && echo borrador > .australis/borrador.md )
+  sout="$(cd "$APP" && bash "$P/scripts/scaffold-web.sh" demo-app 2>&1)"
+  printf '%s' "$sout" | grep -q SCAFFOLD_OK && ok "scaffold completo" || no "el scaffold falló" "$(printf '%s' "$sout" | tail -5)"
+  [ -f "$APP/.australis/borrador.md" ] && ok "respeta lo que ya había en .australis" || no "pisó .australis"
+  grep -qxF '.env*' "$APP/.gitignore" && grep -qxF '!.env.example' "$APP/.gitignore" \
+    && ok ".gitignore deja afuera las claves" || no ".gitignore no excluye .env*"
+  grep -q '^Stack: australis' "$APP/README.md" && ok "README marca el stack" || no "README sin la línea Stack"
+  (cd "$APP" && npm test >/dev/null 2>&1) && ok "npm test pasa" || no "npm test falla"
+  (cd "$APP" && npm run lint >/dev/null 2>&1) && ok "npm run lint pasa" || no "npm run lint falla"
+  (cd "$APP" && npm run build >/dev/null 2>&1) && ok "npm run build pasa" || no "npm run build falla"
+  ctx="$(cd "$APP" && bash "$P/scripts/contexto.sh" 2>/dev/null)"
+  printf '%s' "$ctx" | grep -q '^comando_test: npm test' && printf '%s' "$ctx" | grep -q '^stack: australis' \
+    && ok "contexto detecta el stack y el comando de test" || no "contexto no detecta el stack"
+fi
+
 # ------------------------------------------------------------------ report --
 head_ "Resultado"
 printf '  %s PASS · %s FAIL · %s a revisar a mano\n\n' "$pass" "$fail" "$skip"
