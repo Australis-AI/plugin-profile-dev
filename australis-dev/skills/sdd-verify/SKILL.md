@@ -38,7 +38,9 @@ summary of its intentions; you produce evidence. Follow
 2. With `STRICT TDD MODE IS ACTIVE`, load `${CLAUDE_PLUGIN_ROOT}/skills/sdd-verify/strict-tdd-verify.md`
    and apply it as well.
 3. Run, capturing exit codes (timeout 600000): the test command, the build command, the lint
-   command — whichever exist in `contexto.md`.
+   command — whichever exist in `contexto.md`. They are independent: start the build and the lint in
+   the background and run the tests meanwhile, then wait for all of them. Run them one after the
+   other only when the build writes files the tests read (generated code), and say so.
 4. Compare failures against `baseline.md`: split into inherited and new.
 5. For each criterion, find the covering test and its result, or run the runtime check. Record the
    evidence.

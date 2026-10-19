@@ -169,6 +169,9 @@ epic adds it to the epic's task list.
 - **Baseline:** when `comando_test` is not `ninguno` and `baseline.md` does not exist, run the test
   command once on the fresh branch (timeout 600000) and record which tests fail, or *"sin fallas"*.
   Failures that exist here are inherited; only new ones block integration.
+  Run it in the background (`run_in_background`) and keep going: explore and design only read
+  code, so they can overlap with it. Apply waits for the baseline to finish, because editing files
+  while the suite runs would mix the change into the baseline.
 
 ### 4. Route the issue
 
@@ -188,6 +191,7 @@ Otherwise, judge the route now, not when the issue was written:
 |---|---|
 | **Direct** — apply → verify | Known bug, small well-understood change, the criteria fully describe the result, no open design question |
 | **Explore first** — explore → design (only if needed) → apply → verify | Architecture decisions, several viable approaches, unclear scope, unfamiliar code, or the user flagged doubts |
+| **Design first** — design → apply → verify | The issue already records the decisions (a "Decidido" section, a chosen option, the user's approval of an approach) but the change is large enough to need a file and task plan. Do not explore again what the issue already settled |
 
 If genuinely ambiguous: at `dev`, one question (*"a) Voy directo b) Exploro primero"*); at
 `aprendiz`, explore and say so in one line.
@@ -210,6 +214,12 @@ When `comando_test` is not `ninguno`, add `STRICT TDD MODE IS ACTIVE. Test runne
 - **apply** → code, commits on the branch, `apply-progress.md`. After each apply return, push:
   `git push -u origin HEAD`. Show one progress line per criterion completed.
 - **verify** → `verify.md`: per criterion ✅/❌ with executed evidence, new failures vs baseline.
+
+**Verify and review run at the same time.** When apply returns and the review of step 6 applies,
+launch verify and the reviewer in the same message, both in the background: both only read the
+same diff, and neither needs the other's result. Wait for both, then send one correction batch
+with `verify.md`'s ❌ and the review findings you confirmed. After a correction, run verify again
+and, in parallel, the reviewer over the correction's diff only.
 
 If verify fails: launch apply in **correction mode** with `verify.md` as input, then verify once
 more. If it still fails, go to the gate and show the ❌ with its options.
@@ -268,6 +278,23 @@ In a team repo, instead of `integrar`: *"Queda esperando la revisión de tu equi
 **Integrating with an unmet criterion** (the user wants it anyway): create issue #M in the epic
 with that criterion, mark its test `it.todo('<criterio> (#M)')` (or the runner's skip
 equivalent), commit, push, note it in the PR's Risks, then integrate with the suite green.
+
+### Two issues at once
+
+When the epic has two or more open issues, build them in parallel only when all of this holds:
+- neither needs the other's result (no "after #N", no shared new function or table);
+- the files each one will touch, from its `explore.md`/`design.md` or a quick read of the code,
+  do not overlap, and none of them touches a generated file, a lockfile, a migration or a file the
+  project's `CLAUDE.md` marks as serial;
+- at most two at a time: more parallel work means more merges and more for the user to review.
+
+Each issue gets its own `git worktree` in a sibling folder (`../<repo>-<N>`) on its own branch,
+with its own `.australis/trabajo/<N>/`, and its own phases, review, PR and gate. Two sessions or
+agents never share a folder. Only the main thread pushes and opens PRs. Gates are shown one at a
+time; after one integrates, the other runs `git merge origin/<default>` and verify again before
+its gate. If they turn out to overlap halfway, stop the second one and finish them in order. At
+`aprendiz`, say it in one line: *"Hago el #3 y el #4 a la vez porque no se tocan; los apruebás de
+a uno."*
 
 ---
 
