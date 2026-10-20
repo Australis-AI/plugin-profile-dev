@@ -52,6 +52,7 @@ La mayoría de las veces no hace falta ningún comando: le decís qué querés c
 | `/seguir` | Retomar donde quedaste, en otra sesión o en otra compu |
 | `/publicar` | Poner tu app en internet (la primera vez te guío; después se publica sola) |
 | `/juzgar` | Revisión a fondo: dos revisores ciegos sobre el mismo cambio |
+| `/auditar` | Revisar el proyecto entero (o un área): qué está mal, qué va a doler cuando crezca y qué conviene hacer distinto. Lo que elijas se vuelve issues |
 | `/preparar` | Dejar la compu lista (una vez); `/preparar nivel` cambia cómo trabajamos |
 | `/chequeo` | Ver si algo se rompió, y qué hacer exactamente |
 

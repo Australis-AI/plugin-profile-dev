@@ -61,6 +61,7 @@ Stop and send the user to `/preparar` (one line) when a write is needed and `git
 | "hacé el #4", "construí lo que sigue", "seguí con la épica" | **Build an issue** (`/construir`) |
 | "seguí", "¿dónde quedamos?", a new session mid-issue | **Resume** (`/seguir`) |
 | "publicala", "subila a internet", "¿está publicada?" | **Publish** (`/publicar`) |
+| "auditá", "¿qué se puede mejorar?", "revisá el proyecto entero" | **Audit** (`/auditar`) |
 
 Grey zone: start as a small change. If it stops passing the entry test while it is built, it
 becomes a full issue (see **Small change → It grew**).
@@ -392,6 +393,12 @@ same commit that was already seen in staging.
    - **Anything else (clients, Australis stack):** follow
      `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
 
+## Audit — `/auditar [área]`
+
+Follow `${CLAUDE_PLUGIN_ROOT}/skills/auditar/SKILL.md`. It is read-only until the user picks
+findings; what they pick becomes a small change or an epic of improvements, and from there the
+method runs as usual.
+
 ---
 
 ## Model assignments
@@ -405,6 +412,7 @@ Pass `model` in every Agent call.
 | apply | `australis-dev:sdd-apply` | sonnet |
 | verify | `australis-dev:sdd-verify` | sonnet |
 | review | `australis-dev:jd-judge-a` | sonnet |
+| audit | `australis-dev:auditor`, one per dimension | sonnet |
 | other | — | sonnet |
 
 If a namespaced name does not resolve, list the agent types and use the one whose suffix
