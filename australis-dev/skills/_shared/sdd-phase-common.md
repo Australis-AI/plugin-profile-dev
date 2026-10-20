@@ -21,11 +21,10 @@ It is ignored by git and disposable: GitHub holds the durable record.
 |---|---|---|---|
 | `issue.md` | orchestrator | all | Spanish (the issue as written on GitHub) |
 | `contexto.md` | orchestrator | all | key: value lines from `contexto.sh` |
-| `baseline.md` | orchestrator | apply, verify | test failures that existed before any change |
 | `explore.md` | explore | design, apply | English |
 | `design.md` | design | apply, verify | English |
 | `apply-progress.md` | apply | verify | English |
-| `verify.md` | verify | orchestrator | English, plus the Spanish gate lines |
+| `verify.md` | verify | orchestrator | English, plus the Spanish gate lines; holds the tested commit |
 
 **The contract is the issue.** Its "Listo cuando" criteria are the acceptance criteria, verbatim.
 Its "Restricciones técnicas" section, when present, binds every technical decision. Never edit

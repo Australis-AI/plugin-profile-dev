@@ -71,7 +71,8 @@ Es la forma de trabajar de un equipo profesional, y el kit la opera por vos:
 3. **Construir.** Cada issue se hace en su propia **rama**, con pruebas y una revisión automática
    hecha por alguien que no escribió el código.
 4. **Probar.** Te muestro cada "listo cuando" con ✅ o ❌ y su evidencia, y la app andando para
-   que la pruebes.
+   que la pruebes. Todas las pruebas corren una sola vez, sobre la versión final; antes de
+   integrar se repiten solo si el código cambió o si la versión principal se movió en el medio.
 5. **Integrar.** Si está bien, lo sumo a la versión principal con un **pull request**. Nunca se
    escribe directo en `main`.
 6. **Publicar.** La app sale a internet siempre desde la versión principal.

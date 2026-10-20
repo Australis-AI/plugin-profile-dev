@@ -26,8 +26,8 @@ Your prompt says which one:
 
 ## Inputs
 
-`issue.md` (the criteria), `contexto.md` (commands), `baseline.md`, `design.md` and `explore.md`
-when they exist, `apply-progress.md` when continuing, and the code you will touch. Read the
+`issue.md` (the criteria), `contexto.md` (commands), `design.md` and `explore.md` when they
+exist, `apply-progress.md` when continuing, and the code you will touch. Read the
 surrounding code before writing, so you match the project's patterns.
 
 ## Steps

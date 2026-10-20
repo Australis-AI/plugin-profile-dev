@@ -86,7 +86,9 @@ When coverage tool is available, report coverage for CHANGED files specifically:
 
 ```
 IF the project has a coverage tool (a `coverage` script or coverage config):
-├── Run: {test_command} --coverage (or equivalent)
+├── Do NOT run the suite a second time for coverage: the test run of SKILL.md step 3 is the
+│   only one. Run it with coverage enabled ({test_command} --coverage or the coverage script)
+│   so that one run gives both the results and the report
 ├── Parse the coverage report
 ├── Filter to ONLY files created or modified in this change
 │   (get file list from apply-progress "Files Changed" table)
@@ -112,18 +114,19 @@ IF coverage tool NOT available:
 
 ## Step 5e: Quality Metrics (if tools available)
 
-Run quality checks ONLY on changed files, ONLY if tools are available:
+Report quality ONLY on changed files, ONLY if tools are available. Never run lint or the build
+again: use the output of the runs in SKILL.md step 3.
 
 ```
 Read the quality commands in `contexto.md` (`comando_lint`, `comando_build`):
 
 IF linter available:
-├── Run linter on changed files only
+├── Take the lint output of step 3 and filter it to changed files
 ├── Report: errors and warnings
 └── Flag: WARNING for errors, SUGGESTION for warnings
 
 IF type checker available:
-├── Run type checker (usually whole-project, not per-file)
+├── Take the type errors from the build output of step 3 (do not run a separate checker)
 ├── Filter output to changed files
 ├── Report: type errors in changed files
 └── Flag: WARNING for type errors

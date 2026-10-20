@@ -35,8 +35,9 @@ Model for all of them: `sonnet`.
 1. Launch the single-reviewer prompt. The reviewer never asks anything and never edits.
 2. For each finding, **confirm it yourself** before acting: open the cited code and check the
    claim, or write a test that fails because of it. A finding you cannot confirm is not a fix.
-3. Confirmed CRITICAL and real WARNING findings → one correction batch → tests again.
-   Re-review once. Stop there.
+3. Confirmed CRITICAL and real WARNING findings → one correction batch, which runs the tests of
+   what it touched → re-review once. Stop there. The full battery runs afterwards, once, in
+   verify.
 4. Anything left: into the PR's Risks at `dev`; at `aprendiz` mention it only if it is about
    security.
 

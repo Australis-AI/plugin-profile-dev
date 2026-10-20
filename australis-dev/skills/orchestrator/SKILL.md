@@ -169,15 +169,15 @@ An issue with the label `cambio-chico` is built as a **Small change**, from its 
 - `.australis/trabajo/<N>/issue.md`: `gh issue view <N> --json number,title,body,comments` written
   as markdown.
 - `.australis/trabajo/<N>/contexto.md`: the context script output.
-- **Baseline:** when `comando_test` is not `ninguno` and `baseline.md` does not exist, run the test
-  command once on the fresh branch (timeout 600000) and record which tests fail, or *"sin fallas"*.
-  Failures that exist here are inherited; only new ones block integration.
+- **No baseline run up front.** The full battery runs once per version of the code, in verify.
+  When it finds failures, verify runs only those tests on the default branch to tell inherited
+  from new; only new ones block integration.
 
 ### 4. Route the issue
 
 **Base of a new app.** When the issue is *"Base del proyecto"* and there is no `package.json`,
 follow the **Issue #1** section of `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` in this
-thread instead of routing to explore, design and apply. Verify, review, PR and the gate run as
+thread instead of routing to explore, design and apply. Review, verify, PR and the gate run as
 usual.
 
 **Saved data.** When an issue needs data that survives closing the app and `.env.local` has no
@@ -189,8 +189,8 @@ Otherwise, judge the route now, not when the issue was written:
 
 | Route | When |
 |---|---|
-| **Direct** — apply → verify | Known bug, small well-understood change, the criteria fully describe the result, no open design question |
-| **Explore first** — explore → design (only if needed) → apply → verify | Architecture decisions, several viable approaches, unclear scope, unfamiliar code, or the user flagged doubts |
+| **Direct** — apply → review → verify | Known bug, small well-understood change, the criteria fully describe the result, no open design question |
+| **Explore first** — explore → design (only if needed) → apply → review → verify | Architecture decisions, several viable approaches, unclear scope, unfamiliar code, or the user flagged doubts |
 
 If genuinely ambiguous: at `dev`, one question (*"a) Voy directo b) Exploro primero"*); at
 `aprendiz`, explore and say so in one line.
@@ -212,10 +212,9 @@ When `comando_test` is not `ninguno`, add `STRICT TDD MODE IS ACTIVE. Test runne
   up to 8 lines) before apply and continue without waiting.
 - **apply** → code, commits on the branch, `apply-progress.md`. After each apply return, push:
   `git push -u origin HEAD`. Show one progress line per criterion completed.
-- **verify** → `verify.md`: per criterion ✅/❌ with executed evidence, new failures vs baseline.
 
-If verify fails: launch apply in **correction mode** with `verify.md` as input, then verify once
-more. If it still fails, go to the gate and show the ❌ with its options.
+Verify does not run here. It runs once, in step 7, on the final code: after the review and the
+documentation, so neither of them forces a second battery.
 
 ### 6. Review
 
@@ -226,23 +225,30 @@ By `tipo_de_repo`, never by level:
   `git diff <default>...HEAD` against the issue criteria and dev-context. It never asks the user
   anything.
   1. For each finding, confirm it yourself: open the cited code, or write a failing test.
-  2. Confirmed findings → one apply correction batch → verify again → push.
+  2. Confirmed findings → one apply correction batch (it runs the tests of what it touched) →
+     push. The full battery comes later, in verify.
   3. Unconfirmed findings go to the PR's Risks at `dev`; at `aprendiz` mention them only when they
      are about security.
+  4. Record what was found, fixed and left in `.australis/trabajo/<N>/review.md`.
 - **equipo:** no automatic review. The PR asks for human review and you never merge it.
 
-### 7. Pull request
+### 7. Documentation, verify and pull request
 
-Before the PR, keep permanent documentation current, on the same branch:
-- **ADRs:** for each entry under *ADR candidates* in `design.md`, write one with
-  `${CLAUDE_PLUGIN_ROOT}/skills/adr/SKILL.md`.
-- **README and runbook:** if the change adds or renames an environment variable, changes how to
-  run, test or publish, or adds an external service, update them with
-  `${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`.
+1. **Documentation first**, on the same branch, so verify covers the final code:
+   - **ADRs:** for each entry under *ADR candidates* in `design.md`, write one with
+     `${CLAUDE_PLUGIN_ROOT}/skills/adr/SKILL.md`.
+   - **README and runbook:** if the change adds or renames an environment variable, changes how
+     to run, test or publish, or adds an external service, update them with
+     `${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`.
 
-Commit those (`docs(...)`) and push. Then build `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
-(Context, Decisions, Risks, Verification, `Closes #N`) and run `gh pr create --base <default>
---title "<conventional title>" --body-file <pr.md>`, or `gh pr edit --body-file` if it exists.
+   Commit those (`docs(...)`) and push.
+2. **verify** → `verify.md`: per criterion ✅/❌ with executed evidence, new and inherited
+   failures, and the commit it tested. This is the one full battery for this version of the code.
+   If verify fails: launch apply in **correction mode** with `verify.md` as input, then verify
+   once more. If it still fails, go to the gate and show the ❌ with its options.
+3. Build `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
+   (Context, Decisions, Risks, Verification, `Closes #N`) and run `gh pr create --base <default>
+   --title "<conventional title>" --body-file <pr.md>`, or `gh pr edit --body-file` if it exists.
 
 ### 8. Gate — "Esto anda" (probar)
 
@@ -255,18 +261,27 @@ Show, in Spanish:
 3. The options, answered by writing in the chat:
    - `integrar` — not offered in a team repo. When `app_publicada` is not `no`, call it
      *"integrar (también publica)"*.
-   - `corregir` — a correction batch on the same branch, then back to this gate.
+   - `corregir` — a correction batch on the same branch, the battery again (the code changed),
+     then back to this gate.
    - `dejar en la rama`.
 
 In a team repo, instead of `integrar`: *"Queda esperando la revisión de tu equipo en el PR."*
 
 **Integrating:**
-1. If `gh pr checks <pr>` shows failures that are not in the baseline, do not merge; offer
-   `corregir`.
-2. `gh pr merge <pr> --squash --delete-branch`, then `git checkout <default>` and `git pull
+1. **What gets merged is what was tested.** The battery runs again only when the code that would
+   land on the default branch is not the code it tested:
+   - `git rev-parse HEAD` must equal the tested commit in `verify.md`. If not, run the battery
+     again (verify; in a small change, its step 4).
+   - `git fetch origin`, then `git merge-base --is-ancestor origin/<default> HEAD`. If it
+     succeeds, the default branch has not moved: the merge produces exactly the tested code, and
+     nothing runs again. If it fails, something else was integrated meanwhile: `git merge
+     origin/<default>` into the branch (a conflict is a correction batch), push, run the battery
+     again, and integrate only with it green.
+2. If `gh pr checks <pr>` shows failures that are not inherited, do not merge; offer `corregir`.
+3. `gh pr merge <pr> --squash --delete-branch`, then `git checkout <default>` and `git pull
    --ff-only`, then delete `.australis/trabajo/<N>/`.
-3. If it was the last open issue of the epic, close the epic with a one-line comment.
-4. Offer the next issue in one line: *"¿Seguimos con el #M: <título>?"*
+4. If it was the last open issue of the epic, close the epic with a one-line comment.
+5. Offer the next issue in one line: *"¿Seguimos con el #M: <título>?"*
 
 **Integrating with an unmet criterion** (the user wants it anyway): create issue #M in the epic
 with that criterion, mark its test `it.todo('<criterio> (#M)')` (or the runner's skip
@@ -335,6 +350,9 @@ Run the test, build and lint commands from the context (timeout 600000) on the f
   (`git checkout <default>`, run, `git checkout -`). Failing there too: inherited, note them for
   the PR's Risks. Failing only on the branch: new. Fix, commit, push, and run the battery again.
 
+Record the run in `.australis/trabajo/<N>/verify.md`: the tested commit (`git rev-parse HEAD`),
+each criterion with its evidence, and the result. Integration reads the tested commit from it.
+
 ### 5. PR and gate
 
 1. README and runbook only when the change adds an environment variable or changes how to run,
@@ -359,11 +377,12 @@ becomes one line in the open epic's body, not a file.
 
    | State | Next step |
    |---|---|
-   | No `.australis/trabajo/<N>/` (other machine) | Rebuild `issue.md` and `contexto.md`; if the branch has commits, run verify |
+   | No `.australis/trabajo/<N>/` (other machine) | Rebuild `issue.md` and `contexto.md`; if the branch has commits, review (one-person repo), then verify |
    | No `explore.md`/`apply-progress.md` | Route the issue |
    | `apply-progress.md` with pending tasks | Apply continuation |
-   | No `verify.md`, or code changed after it | Verify |
-   | Verified, no PR | Review and PR |
+   | No `review.md` in a one-person repo | Review |
+   | No `verify.md`, or `HEAD` is not its tested commit | Documentation and verify |
+   | Verified, no PR | PR |
    | PR open, `CHANGES_REQUESTED` | Read `gh pr view --comments`, correction batch |
    | PR open | Result gate |
 

@@ -7,6 +7,8 @@
 ```markdown
 # Verify: #<N> <title>
 
+Tested commit: <full sha from git rev-parse HEAD>
+
 ## Gate (Spanish — shown to the user)
 
 1. <criterio textual del issue> ✅
@@ -27,8 +29,8 @@ PASS | PASS WITH WARNINGS | FAIL — <n> CRITICAL, <n> WARNING
 - Tests: `<command>` → exit <code>, <passed>/<total> passed
 - Build: `<command>` → exit <code>
 - Lint: `<command>` → exit <code>, <n> findings introduced
-- New failures vs baseline: <none | list>
-- Inherited failures (baseline): <none | list>
+- New failures: <none | list>
+- Inherited failures (also fail on the default branch): <none | list>
 
 ## Tasks
 <done>/<total> — incomplete: <list or "none">
