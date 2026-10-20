@@ -24,8 +24,9 @@ entender ─▶ acordar ─▶ construir ─▶ probar ─▶ integrar ─▶ pu
 - **GitHub is the source of truth.** The epic and its issues hold the WHAT (Spanish, approved by
   the user). The PR holds the HOW and the evidence (English). The repository keeps only permanent
   documentation (README, ADRs, runbooks).
-- **Two approvals only:** the epic, once; and the result of each issue, before it is integrated.
-  Stop before building only when an issue changes scope or needs a decision from the user.
+- **Two approvals only:** the definition of the work, once (the epic, or the issue of a small
+  change); and the result of each issue, before it is integrated. Stop before building only when
+  an issue changes scope or needs a decision from the user.
 - **Local working files are ephemeral:** `.australis/trabajo/<N>/` per issue, ignored by git
   through `.australis/.gitignore` containing `*`. Create both when missing. Never commit them.
 - **Stage names** (say them at `aprendiz`, see the teaching material): entender, acordar,
@@ -55,15 +56,14 @@ Stop and send the user to `/preparar` (one line) when a write is needed and `git
 | The user asks for | Route |
 |---|---|
 | A question, an explanation, running tests, reading code | Answer directly. No branch, nothing written. |
-| A small change: copy, a color, a typo, one obvious fix | **Quick fix** |
+| A change that passes the small-change entry test: copy, a color, a fix, a field, a filter | **Small change** |
 | Something new: an app, a feature, several steps | **New work** (`/nuevo`) |
 | "hacé el #4", "construí lo que sigue", "seguí con la épica" | **Build an issue** (`/construir`) |
 | "seguí", "¿dónde quedamos?", a new session mid-issue | **Resume** (`/seguir`) |
 | "publicala", "subila a internet", "¿está publicada?" | **Publish** (`/publicar`) |
 
-Grey zone: start as a quick fix. If it grows past about three files, or needs a decision from the
-user, stop and turn it into an issue of the open epic (*"Esto es más grande de lo que parecía: lo
-sumo como un paso de la épica y lo hacemos ordenado."*).
+Grey zone: start as a small change. If it stops passing the entry test while it is built, it
+becomes a full issue (see **Small change → It grew**).
 
 ## Actions with effects happen here, never in a sub-agent
 
@@ -149,6 +149,8 @@ The number given, or the first open issue in the task list of the open epic (`gh
 <epic> --json body`). No open epic: at `aprendiz` suggest `/nuevo`; at `dev` list open issues
 (`gh issue list`). More than one open epic: ask which. At `dev`, building an issue outside the
 epic adds it to the epic's task list.
+
+An issue with the label `cambio-chico` is built as a **Small change**, from its step 2.
 
 ### 2. Branch
 
@@ -271,23 +273,88 @@ equivalent), commit, push, note it in the PR's Risks, then integrate with the su
 
 ---
 
-## Quick fix
+## Small change
 
-1. Always from the default branch updated: if on an issue branch with changes, commit and push
-   those first. Then `git checkout <default>`, `git pull --ff-only`, `git checkout -b fix/<slug>`.
-2. Make the change. Collect evidence: a test when the behaviour is testable, otherwise the
-   command, output or screenshot you actually ran.
-3. Commit, push, the same single reviewer (skip in a team repo), open the PR with `branch-pr`.
-4. Show the result and ask to integrate. At `dev`, "…y mergealo" in the same request counts as
-   the confirmation; checks, tests and the guard still apply.
+The definition is never skipped; the machinery is. A small change is one issue with its own
+"listo cuando", built in this thread without phase agents, with the full battery run once on the
+final code.
 
-"Guardá esto" means commit and push on the current issue branch, or a quick fix when on the
-default branch. Something small the user postpones becomes one line in the open epic's body, not
-a file.
+### Entry test — all must hold
+
+- The result fits in 1 to 3 "listo cuando" criteria.
+- It touches about three files or fewer.
+- No database schema change and no migration.
+- No new dependency and no new external service.
+- No change to sign-in, permissions or row-level security.
+
+If one fails, or you cannot tell without exploring the code, it is not a small change: something
+new goes to **New work**; a step of an open epic goes to **Build an issue**.
+
+### 1. Define — gate
+
+1. Context (Step 0). If on an issue branch with changes, commit and push those first.
+2. Draft the issue with `${CLAUDE_PLUGIN_ROOT}/skills/epica-issues/SKILL.md`, section *A small
+   change*.
+3. Show it as the user will read it (title, "Qué", the criteria) and close with *"¿Es esto lo que
+   querés?"*. **Stop and wait.** Changes requested: apply them and show it again.
+4. Approved: `gh label create cambio-chico --color C2E0C6 --force`, then `gh issue create --title
+   "<título>" --label cambio-chico --body-file <archivo>`, reading the number from the URL. It
+   does not go into an epic.
+
+### 2. Build
+
+1. Branch exactly as **Build an issue** step 2. Working folder: `issue.md` and `contexto.md`
+   only. No baseline run up front.
+2. Work in this thread. No explore, design, apply or verify agents.
+   - With a test runner, for each criterion with behaviour: write its test first, then the code.
+     Run only those test files while working. No triangulation table, no coverage audit.
+   - Copy, styling or config: the evidence is a command, output or screenshot you actually ran.
+3. Commit per work unit (`git add` and `git commit` as separate commands), then
+   `git push -u origin HEAD`.
+
+**It grew.** If the change stops passing the entry test, stop and say it in one line: *"Esto es
+más grande de lo que parecía: lo sigo como un paso completo, con todas sus revisiones."* Run
+`gh issue edit <N> --remove-label cambio-chico`, keep the issue and the branch, add the issue to
+the open epic's task list when there is one, and continue in **Build an issue** from step 3.
+
+### 3. Review — only when the change touches sensitive code
+
+In a one-person repo, run the single blind reviewer of **Build an issue** step 6 only when the
+diff writes or deletes saved data, adds or changes a server route, or touches environment
+variables. Otherwise skip it. A team repo never gets an automatic review.
+
+The review goes before the battery, so its fixes are covered by the one battery run.
+
+### 4. Battery — once, on the final code
+
+Run the test, build and lint commands from the context (timeout 600000) on the final commit.
+
+- All green: continue.
+- Failures: check out the default branch, run only the failing tests there, and come back
+  (`git checkout <default>`, run, `git checkout -`). Failing there too: inherited, note them for
+  the PR's Risks. Failing only on the branch: new. Fix, commit, push, and run the battery again.
+
+### 5. PR and gate
+
+1. README and runbook only when the change adds an environment variable or changes how to run,
+   test or publish (`${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`). No ADR.
+2. `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
+   (`Closes #N`; Verification: each criterion with its evidence and the battery result), then
+   `gh pr create`.
+3. The **"Esto anda"** gate and integration of **Build an issue** step 8, unchanged. At `dev`,
+   "…y mergealo" in the original request counts as the confirmation to integrate; checks, the
+   battery and the guard still apply.
+
+"Guardá esto" means commit and push on the current issue branch. On the default branch, it is a
+small change whose definition describes what was changed. Something small the user postpones
+becomes one line in the open epic's body, not a file.
 
 ## Resume — `/seguir`
 
-1. Context. If on an issue branch (`feat/<N>-…` or `fix/<N>-…`):
+1. Context. If on an issue branch (`feat/<N>-…` or `fix/<N>-…`) whose issue has the label
+   `cambio-chico` (`gh issue view <N> --json labels`), resume the **Small change**: no commits of
+   its own → Build; commits and no PR → Review and battery; PR open → the result gate.
+   Any other issue branch:
 
    | State | Next step |
    |---|---|

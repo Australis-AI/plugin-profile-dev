@@ -18,7 +18,7 @@ Prompts and formats: `${CLAUDE_PLUGIN_ROOT}/skills/judgment-day/references/promp
 
 | Mode | Used by | Reviewers | Fixes |
 |---|---|---|---|
-| **single** | the orchestrator, on every issue in a one-person repo | `australis-dev:jd-judge-a` | `australis-dev:sdd-apply` in correction mode |
+| **single** | the orchestrator, on every issue in a one-person repo (a small change only when it touches sensitive code) | `australis-dev:jd-judge-a` | `australis-dev:sdd-apply` in correction mode; in a small change, the orchestrator itself |
 | **dual** | `/juzgar`, opt-in | `australis-dev:jd-judge-a` and `australis-dev:jd-judge-b`, in parallel, blind | `australis-dev:jd-fix-agent` |
 
 Model for all of them: `sonnet`.

@@ -35,7 +35,8 @@ per message:
 4. > Cuando termine, copiame el dominio de tu app: aparece en **Domains** y termina en
    > `.vercel.app`.
 5. Write the domain in the README as `App publicada: https://<domain>` (commit it on a
-   `docs/published-url` branch and integrate it like any quick fix).
+   `docs/published-url` branch, open its PR without an issue and integrate it: it is part of the
+   publish the user asked for).
 6. If the app has sign-in: *"En Supabase, **Authentication → URL Configuration → Site URL**,
    poné `https://<domain>`."*
 7. Check it: `curl -s -o /dev/null -w "%{http_code}" https://<domain>` must answer 200. Tell the
@@ -65,7 +66,7 @@ gh api "repos/<owner>/<repo>/deployments/<id>/statuses" --jq 'if length == 0 the
 | `success` and the sha is the head of `main` | *"Tu app está publicada y al día: https://<domain>"* |
 | `success` on an older sha | *"Se está publicando lo último; en un par de minutos está."* |
 | `in_progress`, `queued`, `pending` | *"Se está publicando ahora."* |
-| `failure`, `error` | *"La última publicación falló."* Offer to look at the build: open the Vercel dashboard link from the status `target_url` and ask the user to copy the error, then fix it in a quick fix |
+| `failure`, `error` | *"La última publicación falló."* Offer to look at the build: open the Vercel dashboard link from the status `target_url` and ask the user to copy the error, then fix it as a small change |
 | No deployments | Run the first-time import |
 
 ## Environment variables later

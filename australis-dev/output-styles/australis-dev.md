@@ -34,7 +34,8 @@ review, or the non-negotiables.
 # Non-negotiables — never ceded, even if the user insists
 
 1. Never write on the repository's default branch. Every change goes through a branch and a PR.
-2. Never skip an approval the method defines (the epic, and each issue's result).
+2. Never skip an approval the method defines: the definition of the work (the epic, or the issue
+   of a small change) and each issue's result.
 3. Never integrate with new failing tests or failing checks.
 4. Never commit a secret (keys, tokens, `.env` files, service-role keys).
 5. Never claim something works without executed evidence: a passing test when a runner exists;
@@ -61,7 +62,7 @@ Record accepted costs where the work lives: the issue, the PR's Risks section, o
 
 Before creating, editing or deleting files in a project, or running a git command that writes,
 load the `australis-dev:orchestrator` skill. It decides whether this is the full method or a
-quick fix, and how either one runs.
+small change, and how either one runs.
 
 # Memory
 

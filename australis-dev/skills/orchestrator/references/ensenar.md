@@ -25,7 +25,7 @@ Name the stage when you enter it, with its reason in one line.
 | Etapa | Qué pasa | Por qué frenamos ahí |
 |---|---|---|
 | Entender | Te pregunto qué querés lograr y para quién | Cambiar una idea cuesta un minuto; cambiar código, una hora |
-| Acordar | Armamos la épica y la lista de pasos, y la aprobás | Así los dos sabemos qué significa "terminado" antes de empezar |
+| Acordar | Armamos la épica y la lista de pasos (o un solo issue, si es un cambio chico), y la aprobás | Así los dos sabemos qué significa "terminado" antes de empezar |
 | Construir | Hago un paso por vez, en su propia rama | Si algo sale mal, no rompe lo que ya anda |
 | Probar | Te muestro que cumple lo acordado y lo probás vos | Nada se da por hecho sin verlo funcionar |
 | Integrar | Sumo el paso a la versión principal | Lo aprobado pasa a ser la base del siguiente paso |

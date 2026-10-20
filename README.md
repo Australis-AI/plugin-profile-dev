@@ -75,8 +75,24 @@ Es la forma de trabajar de un equipo profesional, y el kit la opera por vos:
    escribe directo en `main`.
 6. **Publicar.** La app sale a internet siempre desde la versión principal.
 
-Hay **dos momentos** en los que frena y te pregunta: al aprobar la épica y al ver cada resultado.
-Si en el medio aparece algo que cambia lo acordado, también frena.
+Hay **dos momentos** en los que frena y te pregunta: al aprobar lo que se va a hacer (la épica, o
+el issue si es un cambio chico) y al ver cada resultado. Si en el medio aparece algo que cambia lo
+acordado, también frena.
+
+### Cambios chicos
+
+Un cambio chico (un texto, un color, un arreglo, un campo, un filtro) no pasa por todo el método,
+pero sí por la definición:
+
+1. Te muestro un issue con uno a tres "listo cuando" y lo aprobás. No hay entrevista ni épica.
+2. Lo construyo en una rama, con sus pruebas, sin las etapas de exploración y diseño.
+3. Corro todas las pruebas una sola vez, sobre la versión final.
+4. Pasa por revisión automática solo si toca datos guardados, el servidor o las claves.
+5. Te muestro el resultado con su evidencia y decidís si se integra.
+
+Es chico si se resuelve en unos tres archivos o menos, sin cambiar la base de datos, sin sumar
+dependencias ni servicios y sin tocar el inicio de sesión ni los permisos. Si en el camino crece,
+te aviso y sigue como un paso completo.
 
 ### Cómo te habla
 
