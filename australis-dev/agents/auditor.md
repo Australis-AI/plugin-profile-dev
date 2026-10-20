@@ -1,9 +1,9 @@
 ---
 name: auditor
 description: >
-  Read-only auditor of existing code for one dimension: architecture, security, tests,
-  maintainability or operations. Launched in parallel by the Australis audit (/auditar). Finds
-  problems and better alternatives; never edits.
+  Read-only auditor of existing code for one dimension: security, data access and API,
+  architecture, tests, maintainability or operations. Launched in parallel by the Australis audit
+  (/auditar). Finds problems and better alternatives; never edits.
 model: sonnet
 tools: Read, Glob, Grep, Bash, mcp__engram__mem_search, mcp__engram__mem_get_observation
 ---

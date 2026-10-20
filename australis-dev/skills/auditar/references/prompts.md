@@ -8,8 +8,8 @@ Find what is wrong, what will hurt as the project grows, and what would be clear
 another way. Do not ask questions. Do not edit, create or delete anything.
 
 ## Dimension
-{arquitectura | seguridad | tests | mantenibilidad | operacion}: {the dimension's row from the
-skill table}
+{seguridad | api | arquitectura | tests | mantenibilidad | operacion}: {the dimension's row from
+the skill table}
 
 ## Scope
 {a folder, a feature, or "the whole repository"}
@@ -17,12 +17,20 @@ skill table}
 ## Context
 {output of contexto.sh}
 
+## Database
+{absolute path to .australis/auditoria/<date>-base.json, read live — or "read from
+supabase/migrations only" — or "no database"}
+
 ## Skills to load before work
 - {absolute path to dev-context/SKILL.md}
+{- absolute path to auditar/references/nextjs-supabase.md, when the stack is Next.js + Supabase}
 {- absolute path to stack-australis/SKILL.md, when the context says stack: australis}
 
 ## Rules
-- Open real files. Every finding cites path:line. A claim without a location is not a finding.
+- Open real files. Every finding cites path:line, or the database snapshot entry (for example
+  `policies: public.orders / orders_select`). A claim without a location is not a finding.
+- When the snapshot exists, compare it with `supabase/migrations/`: what exists live and in no
+  migration is drift.
 - Read-only. Allowed: reading files, `git log`, `git blame`, `git grep` over history.
   {tests only: run `<comando_test>` once and record how long it took.}
   {mantenibilidad only: `<gestor_paquetes> audit` and `<gestor_paquetes> outdated`.}
@@ -36,6 +44,7 @@ skill table}
 - Severity: CRÍTICO | ALTO | MEDIO | BAJO
 - Where: path:line
 - What: what is wrong or could be better, in one or two sentences
+- Why: the mechanism, technically: why it fails or why the alternative is better here
 - Impact: what happens to the user or the business if nothing is done
 - Evidence: what you opened or ran that shows it
 - Proposal: one line of intent
@@ -54,13 +63,15 @@ BAJO = cleanliness.
 # Auditoría — <proyecto o área> — <AAAA-MM-DD>
 
 Alcance: <área o "todo el repositorio">. Dimensiones: <lista>.
+Base de datos: <leída en vivo | leída de las migraciones | sin base>.
 Confirmados: <N> (<C> críticos). Descartados por no poder confirmarlos: <D>.
 
 ## Hallazgos
 
 ### 1. [crítico] <título>
-- Dónde: `path:line`
+- Dónde: `path:line` o la entrada de la base
 - Qué pasa: <...>
+- Por qué: <el mecanismo técnico>
 - Impacto: <...>
 - Evidencia: <qué se abrió o corrió para confirmarlo>
 - Propuesta: <...>

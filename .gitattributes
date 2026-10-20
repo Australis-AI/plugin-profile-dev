@@ -5,3 +5,4 @@
 # Markdown and JSON are read, not executed — normalize to LF for clean diffs.
 *.md text eol=lf
 *.json text eol=lf
+*.sql text eol=lf
