@@ -205,7 +205,9 @@ Delegate with the model table below. Every launch passes: the issue number, the 
 exact paths `${CLAUDE_PLUGIN_ROOT}/skills/dev-context/SKILL.md` and
 `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`, plus
 `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` when the context says `stack: australis`.
-When `comando_test` is not `ninguno`, add `STRICT TDD MODE IS ACTIVE. Test runner: <comando_test>.`
+When `comando_test` is not `ninguno`, add `TEST RUNNER: <comando_test>. ESSENTIAL TESTS ONLY.`
+Tests cover permissions, data integrity, business rules and fixed bugs; what the user sees is
+checked with the app running at the gate.
 
 - **explore** → `explore.md`, including whether design is needed.
 - **design** (when needed) → `design.md`. At `dev`, show its Decisions table (chosen and rejected,
@@ -253,11 +255,13 @@ By `tipo_de_repo`, never by level:
 ### 8. Gate — "Esto anda" (probar)
 
 Show, in Spanish:
-1. The issue's "listo cuando" criteria, verbatim, each with ✅ or ❌ and one line of evidence in
-   plain words.
-2. The app running, when `comando_dev` exists: start it in the background (for the australis
+1. The app running, when `comando_dev` exists: start it in the background (for the australis
    stack, append `-- --hostname 127.0.0.1`), read the URL from its output, and give the link. Stop
    the server when the gate closes and before any package install.
+2. The issue's "listo cuando" criteria, verbatim, each with ✅ or ❌ and one line of evidence in
+   plain words. Criteria marked *"a ver en la app"* have no test on purpose: request the route on
+   the running app and check what the criterion describes, then show ✅ with *"lo ves en <link>"*
+   or ❌. The user looking at it is the final evidence.
 3. The options, answered by writing in the chat:
    - `integrar` — not offered in a team repo. When `app_publicada` is not `no`, call it
      *"integrar (también publica)"*.
@@ -322,9 +326,11 @@ new goes to **New work**; a step of an open epic goes to **Build an issue**.
 1. Branch exactly as **Build an issue** step 2. Working folder: `issue.md` and `contexto.md`
    only. No baseline run up front.
 2. Work in this thread. No explore, design, apply or verify agents.
-   - With a test runner, for each criterion with behaviour: write its test first, then the code.
-     Run only those test files while working. No triangulation table, no coverage audit.
-   - Copy, styling or config: the evidence is a command, output or screenshot you actually ran.
+   - With a test runner, follow `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/essential-tests.md`: a test
+     first only for permissions, data integrity, business rules or the bug being fixed. Run only
+     those test files while working.
+   - What the user sees (copy, styling, a screen): no test; it is checked with the app running at
+     the gate. Config: the evidence is a command or output you actually ran.
 3. Commit per work unit (`git add` and `git commit` as separate commands), then
    `git push -u origin HEAD`.
 

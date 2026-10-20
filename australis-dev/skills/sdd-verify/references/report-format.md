@@ -50,4 +50,5 @@ PASS | PASS WITH WARNINGS | FAIL — <n> CRITICAL, <n> WARNING
 Rules for the gate block:
 - Criteria copied character for character from the issue, same order and numbering.
 - Evidence lines in plain Spanish with voseo. No test names, paths, stack traces or English terms.
-- ✅ requires evidence from this run; untested is ❌.
+- ✅ requires evidence from this run. A criterion about what the user sees, with no test on
+  purpose, gets *"a ver en la app"* instead of ✅ or ❌; the orchestrator resolves it at the gate.

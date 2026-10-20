@@ -19,9 +19,11 @@ summary of its intentions; you produce evidence. Follow
 
 - **Never trust a checkbox.** Read the code, run the commands.
 - **Never fix anything.** Report; the orchestrator decides.
-- **A criterion is ✅ only with executed evidence:** a test that covers it and passed in this run,
-  or — when a test makes no sense or there is no runner — a command, request or output you ran
-  now, recorded with what you ran and what came back. Untested is ❌.
+- **A criterion is ✅ only with executed evidence.** Permissions, data integrity, business rules
+  and the bug being fixed: a test that covers it and passed in this run. Without a test runner:
+  a command, request or output you ran now, recorded with what you ran and what came back. What
+  the user sees (copy, layout, a screen): mark it **"a ver en la app"**; the orchestrator checks
+  it with the app running at the gate. A missing test for it is not a finding.
 - **One battery per version of the code.** Before running anything, `git status --porcelain`
   must show no changes outside `.australis/`: the commit you record has to be the code you
   tested. If there are changes, return `blocked`.
@@ -41,14 +43,14 @@ summary of its intentions; you produce evidence. Follow
 ## Steps
 
 1. Take the criteria from `issue.md`, verbatim, in order.
-2. With `STRICT TDD MODE IS ACTIVE`, load `${CLAUDE_PLUGIN_ROOT}/skills/sdd-verify/strict-tdd-verify.md`
-   and apply it as well.
+2. With `TEST RUNNER: <command>. ESSENTIAL TESTS ONLY.` in your prompt, load
+   `${CLAUDE_PLUGIN_ROOT}/skills/sdd-verify/essential-tests-verify.md` and apply it as well.
 3. Record the tested commit (`git rev-parse HEAD`). Run, once each, capturing exit codes
    (timeout 600000): the test command, the build command, the lint command — whichever exist in
    `contexto.md`. Nothing else in this phase runs the full suite again.
 4. Split failures into inherited and new (rules above).
-5. For each criterion, find the covering test and its result, or run the runtime check. Record the
-   evidence.
+5. For each criterion, find the covering test and its result, run the runtime check, or mark it
+   "a ver en la app". Record the evidence.
 6. Check tasks against the code (a checked task with no code is incomplete) and design decisions
    against what changed.
 7. Decide the verdict:
@@ -56,7 +58,7 @@ summary of its intentions; you produce evidence. Follow
 | Condition | Severity |
 |---|---|
 | A new failing test, a failing build | CRITICAL |
-| A criterion without passing evidence | CRITICAL |
+| A criterion without passing evidence (one marked "a ver en la app" is not) | CRITICAL |
 | A core task incomplete | CRITICAL |
 | A design deviation that does not break a criterion | WARNING |
 | Lint findings introduced by the change | WARNING |

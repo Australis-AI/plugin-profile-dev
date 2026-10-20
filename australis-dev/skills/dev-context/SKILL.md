@@ -29,11 +29,17 @@ to the user (that is the output style: level, non-negotiables, cost protocol).
 
 ## Testing
 
-- **Testing is part of the work.** The test states the expected behaviour before the
-  implementation is wired, whenever the project has a runner.
+- **Tests protect what a person cannot see.** Permissions, data integrity, business rules with
+  logic, and every bug fixed get a test that would fail if they broke. What the user sees (copy,
+  layout, styling, a screen showing up) gets no test: it is checked with the app running and by
+  the user at the result gate. A test there costs time and tokens, breaks with every design
+  change, and slows down the person building. The rule of thumb: *would the user notice this broke
+  by using the app?* If yes, no test.
+- **Test first, where a test belongs.** For an essential behaviour, the test states it before the
+  implementation is wired. One test per behaviour; a second case only for a real boundary.
 - **Test behaviour, not implementation.** A test that breaks on a harmless refactor is a bad test.
-- **Evidence is executed.** A behaviour is done when a test covering it passes, or, where a test
-  makes no sense (copy, styling, config), when a command, request or output was actually run and
+- **Evidence is executed.** A rule is done when its test passes; what the user sees is done when
+  it was seen in the running app; config is done when a command or output was actually run and
   recorded.
 - **Baseline.** Failures that already existed on the default branch are not yours to hide and not
   a reason to block: record them in an issue and in Risks. New failures block.

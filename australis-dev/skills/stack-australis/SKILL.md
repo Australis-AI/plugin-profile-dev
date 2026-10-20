@@ -56,11 +56,15 @@ supabase/migrations/          SQL migrations, in order
 
 ## Testing rules
 
-- Pure logic: unit tests with no mocks.
-- Components: Testing Library, asserting what the user sees (`getByRole`, `getByText`); mock the
-  feature's `data.ts` with `vi.mock`.
-- Data functions: tested against the real project only through verify's live REST check, never
-  from unit tests.
+- Only essential tests (`${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/essential-tests.md`): permissions,
+  data integrity, business rules, fixed bugs.
+- Pure logic (`features/<capability>/<logic>.ts`): unit tests with no mocks. This is where most
+  tests live.
+- Components: no tests. What they show is checked with the app running at the gate. Exception: a
+  component that enforces a rule (it blocks a double payment, it hides an action from a role) gets
+  a test for that rule, with Testing Library.
+- Data functions and row-level security: checked against the real project through the live REST
+  check, never from unit tests.
 - Commands: `npm test` (all), `npm run lint`, `npm run build`.
 
 ## Running the app

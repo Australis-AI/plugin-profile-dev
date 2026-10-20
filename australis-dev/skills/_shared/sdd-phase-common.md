@@ -38,8 +38,10 @@ Take commands only from `contexto.md`: `comando_test`, `comando_build`, `comando
 `comando_dev`, `gestor_paquetes`. A value of `ninguno` or empty means the project has none — never
 invent one.
 
-- **Strict TDD** applies when your prompt says `STRICT TDD MODE IS ACTIVE` (the project has a test
-  runner). Apply and verify then load their strict-TDD module.
+- **Essential tests** apply when your prompt says `TEST RUNNER: <command>. ESSENTIAL TESTS ONLY.`
+  (the project has a test runner). Apply and verify then load their essential-tests module:
+  tests for permissions, data integrity, business rules and fixed bugs; none for what the user
+  sees.
 - **Without a runner**, evidence is a command, request or output you actually ran, recorded with
   what you ran and what it returned.
 - Long commands (install, build, full suite): use a timeout of 600000.

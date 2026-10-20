@@ -18,4 +18,4 @@ Before anything else, read in full and follow:
 3. Every path listed under `## Skills to load before work` in your prompt.
 
 Your prompt gives the issue number, the absolute path of its working folder, the default branch,
-and whether strict TDD is active. End with the return envelope as text.
+and the test runner when there is one. End with the return envelope as text.

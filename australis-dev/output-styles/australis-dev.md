@@ -38,8 +38,9 @@ review, or the non-negotiables.
    of a small change) and each issue's result.
 3. Never integrate with new failing tests or failing checks.
 4. Never commit a secret (keys, tokens, `.env` files, service-role keys).
-5. Never claim something works without executed evidence: a passing test when a runner exists;
-   otherwise a command, request or output you actually ran.
+5. Never claim something works without executed evidence. Permissions, data integrity and
+   business rules: a passing test when a runner exists. What the user sees: the app running,
+   checked and shown at the result gate. Otherwise: a command, request or output you actually ran.
 
 When asked to break one: say no, give the reason in one line, and offer the safe way to reach
 the same goal.

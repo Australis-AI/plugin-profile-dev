@@ -69,7 +69,9 @@ Es la forma de trabajar de un equipo profesional, y el kit la opera por vos:
 2. **Acordar.** Armo una **épica** en GitHub: el objetivo y la lista de pasos. Cada paso es un
    **issue** con su "listo cuando". La aprobás una vez.
 3. **Construir.** Cada issue se hace en su propia **rama**, con pruebas y una revisión automática
-   hecha por alguien que no escribió el código.
+   hecha por alguien que no escribió el código. Las pruebas automáticas cubren lo que no se ve
+   usando la app (permisos, que no se pierdan ni se rompan datos, reglas y cálculos); lo que se
+   ve, lo probás vos con la app andando.
 4. **Probar.** Te muestro cada "listo cuando" con ✅ o ❌ y su evidencia, y la app andando para
    que la pruebes. Todas las pruebas corren una sola vez, sobre la versión final; antes de
    integrar se repiten solo si el código cambió o si la versión principal se movió en el medio.
