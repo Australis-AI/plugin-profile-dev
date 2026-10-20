@@ -42,10 +42,12 @@ Name the stage when you enter it, with its reason in one line.
 
 ### `epica` — épica e issues
 - **El problema:** una app entera es demasiado grande para hacerla de una vez sin perderse.
-- **La idea:** la épica es el objetivo grande y su lista de pasos. Cada paso es un issue: una
-  tarjeta con qué tiene que pasar para darlo por terminado. La épica es la única lista de
+- **La idea:** la épica es el objetivo grande y su lista de pasos. Los pasos se agrupan en
+  milestones: tramos que, al terminarlos, te dejan algo que ya podés usar. Cada paso es un issue:
+  una tarjeta con qué tiene que pasar para darlo por terminado. La épica es la única lista de
   pendientes.
-- **Para verlo vos:** en GitHub, pestaña **Issues**: está la épica y un issue por paso.
+- **Para verlo vos:** en GitHub, pestaña **Issues**: está la épica y un issue por paso; en
+  **Milestones** ves cuánto falta para terminar cada tramo.
 
 ### `rama` — rama
 - **El problema:** si trabajás directo sobre la versión que anda, un error la rompe.

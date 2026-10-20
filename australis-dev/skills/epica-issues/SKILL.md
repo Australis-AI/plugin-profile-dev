@@ -1,6 +1,6 @@
 ---
 name: epica-issues
-description: "Redactar la épica y sus issues ordenados en GitHub, con criterios de 'listo cuando' verificables. Se usa después de descubrir, para sumar un issue a una épica abierta, o para definir un cambio chico."
+description: "Redactar la épica, sus milestones y sus issues ordenados en GitHub, con criterios de 'listo cuando' verificables. Se usa después de descubrir, para sumar un issue a una épica abierta, o para definir un cambio chico."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
@@ -11,8 +11,17 @@ metadata:
 
 # Epic and Issues
 
-The epic is the single source of pending work. Each issue is one step that can be built, checked
-and integrated on its own. Both are written in **Spanish**, for the person who approves them.
+The epic is the single source of pending work. Its issues are grouped in **milestones**: stretches
+of work that each end with something the user can use. Each issue is one step that can be built,
+checked and integrated on its own. All of it is written in **Spanish**, for the person who
+approves it.
+
+```
+épica (el objetivo, la escala, el alcance)
+ ├─ M1 · <lo que se va a poder hacer al cerrarlo>   ← issues 1..n
+ ├─ M2 · <…>                                        ← issues
+ └─ M3 · <…>
+```
 
 ## Writing rules
 
@@ -33,6 +42,37 @@ and integrated on its own. Both are written in **Spanish**, for the person who a
    comportamiento"* as the only criterion plus what must keep working (*"los tests existentes
    siguen pasando"*).
 8. Titles: short, imperative, Spanish. *"Cargar un gasto"*, not *"Implementación del alta"*.
+
+## Milestones
+
+How to split:
+1. **A milestone ends with something the user can use or show**, not with a layer of the code.
+   ✅ *"M2 · Cargar un gasto y ver el total del mes"*. ❌ *"M2 · Backend"*.
+2. **In order:** each one builds on the previous and leaves the app usable. Milestones are built
+   one after the other, never two at once.
+3. **Size:** 3 to 8 issues. More than 8 means it is two milestones. A *prototipo* usually has
+   one; a *plataforma* several.
+4. **M1 holds the foundations:** issue #1 *"Base del proyecto"* for a new app, plus the first
+   thing that can be used.
+5. **Title:** `M<n> · <resultado>`, Spanish, the result in the user's words.
+
+Milestone description (Spanish; GitHub lists its issues and shows its progress, so it does not
+repeat them):
+
+```markdown
+**Qué es.** <una o dos oraciones: el tramo del producto que se construye>
+
+**Qué se va a poder hacer al terminarlo.**
+1. <capacidad, en palabras del usuario>
+2. <…>
+
+**Qué implica.** <solo si hay algo que el usuario tiene que saber: datos que se migran, una
+primera publicación, un servicio que se suma; si no, omitir>
+
+**Qué queda afuera.** <lo que llega en un milestone posterior, y cuál>
+
+**Está terminado cuando** <un recorrido concreto en la app que lo demuestra>.
+```
 
 ## New app: issue #1
 
@@ -103,7 +143,12 @@ Title: the product or feature name, no prefix (*"Gastos personales"*). Label: `e
 - [ ] <el resultado global que da por terminada la épica>
 
 ## Pasos
+
+### M1 · <resultado>
 - [ ] #<N> <título del issue>
+- [ ] #<N> <título del issue>
+
+### M2 · <resultado>
 - [ ] #<N> <título del issue>
 
 ---
@@ -112,17 +157,30 @@ Aprobada en la sesión del <AAAA-MM-DD>.
 
 ## Creating them (the orchestrator runs this after approval)
 
+Run them with the **Bash tool**.
+
 1. `gh label create epica --color 5319E7 --force`
-2. For each issue, in order: write the body to a temporary file and run
-   `gh issue create --title "<título>" --body-file <archivo>`. Read the number from the URL it
-   prints.
-3. The epic last, with the real numbers in **Pasos**: `gh issue create --title "<título>" --label
-   epica --body-file <archivo>`.
+2. For each milestone, in order: write its description to a temporary file and run
+   `gh api repos/<owner>/<repo>/milestones -f title="M<n> · <resultado>" -F description=@<archivo>`.
+3. For each issue, in order: write the body to a temporary file and run
+   `gh issue create --title "<título>" --milestone "M<n> · <resultado>" --body-file <archivo>`.
+   Read the number from the URL it prints.
+4. The epic last, with the real numbers in **Pasos**: `gh issue create --title "<título>" --label
+   epica --body-file <archivo>`. The epic itself has no milestone: it spans all of them.
 
 GitHub links each `#N` in the epic to its issue, so issues never need editing to point back.
 
 ## Adding an issue to an open epic
 
-Create the issue as above, then append `- [ ] #<N> <título>` to the epic's **Pasos** with
-`gh issue edit <epic> --body-file <archivo>` (read the current body first and keep everything
-else intact).
+Create the issue as above, in the milestone it belongs to: the current one if it is needed to
+finish it, a later one otherwise. Then add `- [ ] #<N> <título>` under that milestone in the
+epic's **Pasos** with `gh issue edit <epic> --body-file <archivo>` (read the current body first
+and keep everything else intact). A new stretch of work that does not fit an existing milestone
+gets a new milestone at the end, created as above.
+
+## An epic created before milestones
+
+When an open epic has a flat **Pasos** list, leave it as it is until the user plans more work in
+it. Then propose grouping the open issues in milestones, show the grouping at the gate, and only
+after approval create the milestones, assign the issues (`gh issue edit <N> --milestone "…"`) and
+regroup **Pasos**.

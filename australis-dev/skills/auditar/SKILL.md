@@ -156,7 +156,8 @@ Show the user, in Spanish:
 - **One chico finding:** a **Small change** of the orchestrator, from its Define gate, with the
   finding as the draft.
 - **More than one, or any grande:** an epic *"Mejoras: <área o proyecto>"*, drafted with
-  `${CLAUDE_PLUGIN_ROOT}/skills/epica-issues/SKILL.md`, one issue per finding, críticos first.
+  `${CLAUDE_PLUGIN_ROOT}/skills/epica-issues/SKILL.md`, one issue per finding, críticos first:
+  M1 holds the críticos and the high-impact chico findings, later milestones the rest.
   Chico issues get the label `cambio-chico`, so they are built in the light lane. A finding that
   changes structure without changing behaviour uses the *"Sin cambio de comportamiento"*
   criterion. An intermediate API is an epic of its own, one capability per issue. Then follow
