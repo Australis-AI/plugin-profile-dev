@@ -43,6 +43,12 @@ before reporting it.
 
 ### When an intermediate API is worth proposing
 
+Start from the scale (`escala` in the context):
+- **plataforma:** an API is expected. Its absence is an ALTO finding, and the proposal is the
+  migration path below.
+- **prototipo:** do not propose it. Say that direct access with RLS is right for its size.
+- **producto, or unknown:** decide by the evidence below.
+
 Propose it when the evidence shows at least one of these:
 - A second client exists or is planned: CLI, MCP server, mobile app, integration, agents.
 - Business rules are duplicated across paths, or live in the browser.
@@ -76,15 +82,31 @@ The shape to propose:
   without an index; rows that belong to someone without a `user_id`; money as `real` or `double
   precision`; `timestamp` without time zone; states as free text with no check or enum.
 
-## operacion — Vercel or Railway
+## operacion — the database and where it is published
 
 - **Drift:** the snapshot has tables, columns, policies or functions that no file in
   `supabase/migrations/` creates. The schema was changed from the dashboard and the repository
   can no longer rebuild the database.
-- Preview deployments pointing at the production database.
 - No staging: changes go from a branch straight onto production data.
 - Backups: what the plan includes, and whether a restore was ever tried. Point-in-time recovery
   is a paid add-on.
 - Environment variables set by hand per environment, with no `.env.example` listing them.
 - Errors that only reach the browser console: nothing logged on the server.
-- Railway: data written to the container's disk without a volume is lost on every deploy.
+
+Where it is published (`deploy` in the context; inferred or asked when unknown):
+
+- **How a merge reaches production.** The method publishes through a GitHub Actions workflow on
+  push to the default branch. Look for `.github/workflows/` and the platform's own settings.
+  - **Vercel with its Git integration** (no deploy workflow, no `"git": {"deploymentEnabled":
+    false}`): only commits by members of the Vercel team get built, a paid seat each on Pro, so a
+    merge by anyone else stays unpublished. ALTO when more than one person integrates; the
+    proposal is the workflow of `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
+  - Production deployed from a branch other than the default one, or by hand from a laptop.
+- **Vercel:** preview deployments pointing at the production database; production variables
+  that differ from what `.env.example` lists.
+- **Railway:** the service connected to the repository and also deployed by a workflow (double
+  deploys); data written to the container's disk without a volume is lost on every deploy.
+- **Own infrastructure (a server with Dokploy):** a `Dockerfile` that runs as root, has no
+  health check, or bakes secrets into the image; no backup of the database or volumes outside the
+  server; how a deploy is triggered (on push to the default branch, or by hand); TLS on the
+  public domain. What cannot be seen from the repository is asked, not assumed.

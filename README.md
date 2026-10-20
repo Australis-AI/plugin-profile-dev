@@ -129,6 +129,9 @@ se integra algo que rompe pruebas y no se da nada por terminado sin evidencia.
 - **En GitHub:** la épica, los issues, los pull requests y toda la historia.
 - **En tu repo:** el código y la documentación que perdura (README, decisiones importantes).
 - **En `.australis/`:** archivos de trabajo temporales del paso en curso. No se suben a GitHub.
+- **En `.env.local`:** las claves de tu app y las del kit (leer tu base de datos, publicar desde
+  GitHub). Ese archivo nunca se sube. Las secretas las pegás vos ahí: el kit no te las pide por
+  el chat ni las muestra.
 
 ## Actualizar
 

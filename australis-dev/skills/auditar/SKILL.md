@@ -28,34 +28,69 @@ References:
 - `repo: no` or no source files: say there is nothing to audit yet and stop.
 - Stack: when `package.json` lists `next` and `@supabase/supabase-js` or `@supabase/ssr`, every
   auditor also gets the Next.js + Supabase checks.
+- **Scale and where it is published** (`escala` and `deploy` in the context). They decide two
+  judgments: whether the app needs an API, and what to check in its deployment. When either is
+  `sin definir`:
+  - Infer what you can: `vercel.json` or `.vercel/` → vercel; `railway.json` or `railway.toml`
+    → railway; a `Dockerfile` with no platform file → probably own infrastructure.
+  - At `dev`, confirm both in one message, with your inference as the default: *"¿Qué escala
+    tiene esto: prototipo, producto o plataforma? Y se publica en <lo que inferí>, ¿no?"*
+  - At `aprendiz`, ask only the scale, in plain words (as in discovery), and use the inference
+    for the deployment.
+  - Say in the report that they were missing; writing the README lines becomes a chico finding.
 - Ensure `.australis/.gitignore` contains `*`. Everything the audit writes goes to
   `.australis/auditoria/`.
 
-## 1. The database — read it live
+## 1. The database — read access that stays
 
 When the project uses Supabase (`@supabase/*` in `package.json`, or a `supabase/` folder), audit
 the live database, not only the migrations: changes made from the dashboard never reach the
-repository, and that difference is itself a finding. Read the schema with the first route that
-works. Read-only and schema only: never a row of user data.
+repository, and that difference is itself a finding.
 
-1. **A Supabase MCP is connected in this session:** run the snapshot query with its SQL tool, and
-   its security and performance advisors when it offers them.
-2. **Otherwise, the SQL editor**, the same way migrations are applied in
-   `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/references/supabase.md`: copy the snapshot query to
-   the clipboard, open `https://supabase.com/dashboard/project/<ref>/sql/new` (`<ref>` is the
-   subdomain of the project URL, usually `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`; read it
-   without printing anything else from that file) and say:
-   > Para auditar la base necesito ver cómo está armada: tablas, permisos y funciones, sin leer
-   > ningún dato. Se abrió el editor SQL de Supabase: pegá con **Ctrl+V**, tocá **Run** y copiame
-   > el resultado (es una sola celda). Si preferís que siga sin la base, decime «sin la base».
+The access is set up once and stays in the project: two variables in `.env.local`, which git
+ignores, read by `${CLAUDE_PLUGIN_ROOT}/scripts/supabase-lectura.mjs`. The script talks to the
+Supabase Management API with `read_only: true`, so every query runs as Supabase's read-only
+database user, and it refuses anything that is not a read.
 
-   At `dev`, add one line: *"Si tenés el MCP de Supabase, conectalo en modo solo lectura y lo
-   leo yo."* **Wait** for the result.
-3. **No access, or the user prefers without it:** continue with `supabase/migrations/` only, and
-   say in the report that the database was read from the repository, not live.
+**Route 1 — the read token (the main one).**
+1. Check `git check-ignore -q .env.local`. If it fails, the token cannot go there: that is a
+   crítico finding of its own, and you take route 2.
+2. If `SUPABASE_ACCESS_TOKEN` is already in `.env.local`, skip to 4.
+3. Append `SUPABASE_PROJECT_REF=<ref>` (the subdomain of `NEXT_PUBLIC_SUPABASE_URL`; read it
+   without printing anything else from that file) and an empty `SUPABASE_ACCESS_TOKEN=` to
+   `.env.local`, then say:
+   > Para auditar la base necesito leerla: cómo está armada, sus permisos y sus funciones. Lo
+   > dejamos configurado una vez y queda para cuando haga falta.
+   > 1. Entrá a **supabase.com/dashboard/account/tokens** con la cuenta dueña del proyecto.
+   > 2. Tocá **Generate new token**, nombre `lectura-<proyecto>`, y copialo (empieza con `sbp_`).
+   > 3. Abrí `.env.local` en tu proyecto, pegalo después de `SUPABASE_ACCESS_TOKEN=` y guardá.
+   >    **No me lo pegues en el chat.**
+   >
+   > Yo lo uso solo para leer. Ojo: ese token abre todos los proyectos de esa cuenta, así que si
+   > el proyecto es de un cliente, que lo genere el cliente desde su cuenta. Si no podés
+   > generarlo, decime y vamos por otro camino.
 
-Save what came back to `.australis/auditoria/<AAAA-MM-DD>-base.json` and pass its path to the
-auditors. Never ask for the database password or a secret key.
+   At `dev`, add the technical line: *"Es un personal access token de la Management API; las
+   consultas van con `read_only: true` (rol `supabase_read_only_user`). La anon o publishable
+   key no sirve para esto: no lee el catálogo."* **Wait** for it.
+4. Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/supabase-lectura.mjs" --file
+   "${CLAUDE_PLUGIN_ROOT}/skills/auditar/references/base-supabase.sql"` from the project root.
+   HTTP 401 or 403: the token is wrong or belongs to another account; say it in one line and
+   offer route 2.
+
+**Route 2 — when there is no token.** In this order, the first that works:
+- A Supabase MCP connected in this session: run the snapshot query with its SQL tool, and its
+  security and performance advisors when it offers them.
+- The SQL editor, the same way migrations are applied in
+  `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/references/supabase.md`: copy the snapshot query
+  to the clipboard, open `https://supabase.com/dashboard/project/<ref>/sql/new` and say:
+  > Se abrió el editor SQL de Supabase: pegá con **Ctrl+V**, tocá **Run** y copiame el resultado
+  > (es una sola celda). No lee ningún dato, solo cómo está armada la base.
+- Nothing: continue with `supabase/migrations/` only, and say in the report that the database
+  was read from the repository, not live.
+
+Save the snapshot to `.australis/auditoria/<AAAA-MM-DD>-base.json` and pass its path to the
+auditors. Never ask for the database password, a `service_role` or an `sb_secret_` key.
 
 ## 2. Auditors — in parallel
 
@@ -69,11 +104,11 @@ stack matches, plus `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` when
 | Dimension | Looks for |
 |---|---|
 | seguridad | Secrets in code or in git history, missing authorization, row-level security off or without policy, unescaped input, public writes |
-| api | How each client reaches the data and where the rules live; whether a second client (CLI, MCP, mobile, integration) could use the same capabilities; whether an intermediate API is worth it |
+| api | How each client reaches the data and where the rules live; whether a second client (CLI, MCP, mobile, integration) could use the same capabilities; whether an intermediate API is worth it, starting from the scale |
 | arquitectura | Structure that hides what the system does, business rules mixed with database or UI, the database model, patterns used inconsistently, a simpler design for the same result |
 | tests | Rules, permissions or data integrity with no test, tests that prove nothing, a slow or flaky suite, no test runner |
 | mantenibilidad | Duplication, dead code, oversized files and functions, outdated or vulnerable dependencies |
-| operacion | How to run, test and publish undocumented, schema drift between the live database and the migrations, environments, backups, errors swallowed or never logged |
+| operacion | How to run, test and publish undocumented, schema drift between the live database and the migrations, how a merge reaches production on Vercel, Railway or own infrastructure, environments, backups, errors swallowed or never logged |
 
 Only the `tests` auditor runs the test command, once, timed. The others never run tests or
 builds.

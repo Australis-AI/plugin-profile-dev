@@ -24,6 +24,11 @@ You investigate so the next phase builds on facts, not guesses. Follow
   (`git log`, `ls`, running the existing tests) are fine.
 - **Open real files.** Never infer a stack or a pattern from a file name.
 - **Stay on the issue.** Explore what its criteria need, not the whole codebase.
+- **The live database, when the issue touches data** and `.env.local` has
+  `SUPABASE_ACCESS_TOKEN`: read the tables, policies and functions involved with
+  `node "${CLAUDE_PLUGIN_ROOT}/scripts/supabase-lectura.mjs" "<select …>"` (read-only by
+  construction). Prefer it over the migrations when they disagree, and record the difference
+  under Risks.
 - In an empty or freshly created project there is little to explore: say so in three lines and
   recommend design only if the issue needs a decision the stack does not already make.
 
