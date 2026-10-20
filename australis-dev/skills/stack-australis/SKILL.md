@@ -21,7 +21,7 @@ still overrides this reference.
 | Styling | Tailwind CSS | *"Los estilos van junto a cada pantalla, sin archivos sueltos."* |
 | Data and sign-in | Supabase (Postgres + Auth) | *"Guarda tus datos en una base real y maneja las cuentas de usuario."* |
 | Tests | Vitest + Testing Library | *"Pruebas rápidas que comprueban solas que la app hace lo acordado."* |
-| Deploy | Vercel, connected to GitHub | *"Cada vez que integramos un paso, se publica solo."* |
+| Deploy | Vercel by default; Railway or own infrastructure (Dokploy) when chosen. Always published by GitHub Actions from `main` | *"Cada vez que integramos un paso, se publica solo, lo integre quien lo integre."* |
 
 ## Structure
 
@@ -54,6 +54,53 @@ supabase/migrations/          SQL migrations, in order
 - Setup, migrations and the live checks are in
   `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/references/supabase.md`.
 
+## Escala — how the browser reaches the data
+
+The README line `Escala:` (written in issue #1, from discovery) decides it.
+
+- **prototipo, producto:** as described above. Components call `features/<capability>/data.ts`,
+  which uses the Supabase client; row-level security protects every row.
+- **plataforma:** an API from the first issue that saves data, so a CLI, an MCP server, a mobile
+  app or another system can later use the same capabilities without copying the rules.
+
+```
+app/api/v1/<capability>/route.ts   the API: checks the user, validates, applies the rules
+features/<capability>/data.ts      calls the API with fetch, never Supabase directly
+features/<capability>/<logic>.ts   the rules, pure, used by the API
+lib/supabase-as-user.ts            a Supabase client for one request, acting as its user
+```
+
+Rules for the API:
+- **It acts as the user.** `data.ts` sends the user's access token (from the browser's Supabase
+  session) as `Authorization: Bearer`. The route builds its Supabase client with the publishable
+  key and that token, so row-level security still decides. No secret key, no `service_role`.
+- **It checks the user inside the route** with `supabase.auth.getUser(token)`, never only in
+  middleware, and answers 401 without a valid user.
+- **It validates every input** with a schema (zod) and answers 400 saying what is wrong.
+- **Versioned and typed:** paths start with `/api/v1/`; each route exports its input and output
+  types, so a later CLI or MCP server reuses them.
+- Essential tests: each route's authorization (no user → 401; another user's row → 404) and its
+  validation, plus the rules in `<logic>.ts`.
+
+```ts
+// lib/supabase-as-user.ts
+import { createClient } from "@supabase/supabase-js";
+
+export function supabaseAsUser(accessToken: string) {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
+}
+```
+
+Moving a *producto* to *plataforma* later is an epic of its own: one capability per issue, moved
+behind the API; the browser's direct access to a table is removed only when nothing uses it.
+
 ## Testing rules
 
 - Only essential tests (`${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/essential-tests.md`): permissions,
@@ -83,6 +130,8 @@ Run by the orchestrator in the main thread, on branch `feat/1-project-base`:
 2. `bash "${CLAUDE_PLUGIN_ROOT}/scripts/scaffold-web.sh" <slug>` with a timeout of 600000. It
    prints `SCAFFOLD_OK`. If it fails during dependencies, run it again: it resumes.
 3. Run `npm test`, `npm run lint`, `npm run build`. All must pass.
+   Then add the discovery's two kit lines to the README, next to the `Stack:` line:
+   `Escala: <prototipo|producto|plataforma>` and `Deploy: <vercel|railway|dokploy>`.
 4. Connect Supabase (reference above) if the epic needs saved data; otherwise leave
    `.env.example` for later.
 5. Commit in work units (`chore: scaffold next.js app`, `test: add vitest setup`), push, then

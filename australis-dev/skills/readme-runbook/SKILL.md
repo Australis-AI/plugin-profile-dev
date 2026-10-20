@@ -26,7 +26,7 @@ Otherwise, leave the docs alone. Commit: `docs(readme): <what changed>`.
 ## README shape
 
 Language: the language of the existing docs; Spanish when there is none. Keep the kit's machine
-lines exactly as they are (`Stack: australis (…)`, `App publicada: …`).
+lines exactly as they are (`Stack: australis (…)`, `Escala: …`, `Deploy: …`, `App publicada: …`).
 
 ```markdown
 # <Nombre de la app>
@@ -53,9 +53,12 @@ App publicada: <url>
 | `NEXT_PUBLIC_SUPABASE_URL` | Dirección de la base de datos | Supabase → Project Settings → API Keys |
 
 ## Publicar
-<Cómo se publica: "cada integración a main se publica sola en Vercel".>
+<Cómo se publica: "cada integración a main se publica sola en <Vercel | Railway | el servidor
+propio>, con GitHub Actions".>
 
 Stack: australis (Next.js + Supabase + Vitest)
+Escala: <prototipo | producto | plataforma>
+Deploy: <vercel | railway | dokploy>
 ```
 
 Never put a real secret, a password or a private URL in the README.

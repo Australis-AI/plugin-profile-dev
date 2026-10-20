@@ -83,6 +83,21 @@ Hay **dos momentos** en los que frena y te pregunta: al aprobar lo que se va a h
 el issue si es un cambio chico) y al ver cada resultado. Si en el medio aparece algo que cambia lo
 acordado, también frena.
 
+### Escala y dónde se publica
+
+Al planificar se definen dos cosas que cambian cómo se construye:
+
+- **Escala.** *Prototipo* (para probar una idea), *producto* (lo usa un negocio todos los días) o
+  *plataforma* (varios tipos de usuario, integraciones, o más de una forma de entrar: web, una
+  CLI, un MCP, otros sistemas). Una plataforma nace con una API en el medio; un prototipo o un
+  producto no la necesitan.
+- **Dónde se publica.** Vercel por defecto; Railway, o infraestructura propia (un servidor con
+  Dokploy) cuando se elige. En Vercel y Railway se publica siempre con **GitHub Actions**: cada
+  integración a la versión principal se publica sola, la haga quien la haga, sin pagar un lugar
+  en Vercel por cada persona que integra.
+
+Las dos quedan anotadas en el README del proyecto.
+
 ### Cambios chicos
 
 Un cambio chico (un texto, un color, un arreglo, un campo, un filtro) no pasa por todo el método,

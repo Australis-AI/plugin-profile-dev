@@ -45,7 +45,7 @@ It prints `key: value` lines: `nivel`, `onedrive`, `repo`, `firma_git`, `remoto`
 `repo_github`, `rama_por_defecto`, `rama_actual`, `commits_en_rama_por_defecto`,
 `commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `epica_abierta`, `pr_de_la_rama`,
 `comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`,
-`app_publicada`.
+`escala`, `deploy`, `app_publicada`.
 Read it silently. Re-run it after any step that changes branches or GitHub state.
 
 Stop and send the user to `/preparar` (one line) when a write is needed and `github` is
@@ -126,9 +126,10 @@ issues. For a new app (case B or C), issue #1 is always *"Base del proyecto"*.
 
 ### 4. Gate — the user approves the epic
 
-Show the epic as the user will read it: goal, scope, out of scope, and the numbered list of issues
-with their "listo cuando" criteria. At `dev`, add the technical approach and main risks in up to
-three lines. Close with: *"¿La aprobás así, o cambiamos algo?"* Then **stop and wait**.
+Show the epic as the user will read it: goal, scale and where it is published, scope, out of
+scope, and the numbered list of issues with their "listo cuando" criteria. At `dev`, add the
+technical approach and main risks in up to three lines, including what the scale implies (a
+*plataforma* gets an API from the first data issue). Close with: *"¿La aprobás así, o cambiamos algo?"* Then **stop and wait**.
 
 - Changes requested: apply them to the draft and show the gate again.
 - Approved: write to GitHub, in this order —
@@ -403,20 +404,37 @@ Production always comes from the default branch, trunk-based: nothing is deploye
 branch, and staging (where it exists) follows the default branch too, so production receives the
 same commit that was already seen in staging.
 
+**Published by GitHub Actions.** On Vercel and Railway, production is deployed by a workflow on
+every push to the default branch, never by the platform's own Git integration. With Vercel's,
+only commits whose author is a member of the Vercel team get built (a paid seat each), so a merge
+by anyone else stays unpublished. With Actions, whoever integrates publishes.
+
 1. Context. If `cambios_sin_commitear` > 0 or the current branch has unintegrated work, say it in
    one line and offer to finish that issue first.
-2. Route by owner of `repo_github`:
-   - **`Australis-AI/…` (Australis infrastructure):** read the deploy SOP from
+2. Where it is published, from `deploy`:
+   - **`sin definir`:** for `Australis-AI/…` repositories it is `dokploy`. Otherwise, at
+     `aprendiz`, it is `vercel`; say why in one line (*"Lo publico en Vercel: es lo más simple
+     para empezar y no tiene costo mientras sea para uso personal."*). At `dev`, ask once:
+     *"¿Dónde se publica? a) Vercel (recomendado para un prototipo o un producto) b) Railway
+     c) Infraestructura propia con Dokploy (un servidor tuyo o del cliente)"*, with one line on
+     when each one fits. The answer becomes the README line `Deploy: <vercel|railway|dokploy>`,
+     committed with the first publish.
+   - **`vercel`:** follow `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
+   - **`railway`:** follow `${CLAUDE_PLUGIN_ROOT}/skills/deploy-railway/SKILL.md`.
+   - **`dokploy`** (own infrastructure: a server running Dokploy): read the deploy SOP from
      `$CEREBRO_DIR/australis/dev/reference/deploy-dokploy.md` (`CEREBRO_DIR` is an environment
      variable on Agus's machines). If the variable or the file is missing, say *"Este repo se
-     publica con el procedimiento interno de Australis, que no está en esta compu."* and stop.
-     Otherwise follow the SOP with these method rules on top: PRs always target the default
-     branch; the staging app tracks the default branch; production is promoted with the same
-     commit; production migrations are manual with a backup. Where the SOP still describes a
-     `staging` branch, follow the trunk rules and tell Agus the SOP needs updating. Never copy
-     server addresses, hosts or keys from the SOP into the repository, an issue or a PR.
-   - **Anything else (clients, Australis stack):** follow
-     `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
+     publica en infraestructura propia con el procedimiento de Australis, que no está en esta
+     compu."* and stop. Otherwise follow the SOP with these method rules on top: PRs always
+     target the default branch; the staging app tracks the default branch; production is
+     promoted with the same commit; production migrations are manual with a backup. Where the
+     SOP still describes a `staging` branch, follow the trunk rules and tell Agus the SOP needs
+     updating. Never copy server addresses, hosts or keys from the SOP into the repository, an
+     issue or a PR.
+
+Tokens for Actions follow one rule: the user pastes them into `.env.local` (never into the chat),
+you check that the file is ignored by git first (`git check-ignore -q .env.local`), and you pass
+them to `gh secret set` from that file without printing them.
 
 ## Audit — `/auditar [área]`
 

@@ -90,6 +90,9 @@ Title: the product or feature name, no prefix (*"Gastos personales"*). Label: `e
 ## Para quién
 <quién y en qué situación>
 
+## Escala
+<prototipo | producto | plataforma> — <por qué, en una línea>. Se publica en <Vercel | Railway | infraestructura propia>.
+
 ## Alcance
 - <capacidad>
 
