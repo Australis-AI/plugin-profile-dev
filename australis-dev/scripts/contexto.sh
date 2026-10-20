@@ -154,6 +154,15 @@ say gestor_paquetes "$([ -f package.json ] && echo "$pm" || echo ninguno)"
 
 if grep -q '^Stack: australis' README.md 2>/dev/null; then say stack australis; else say stack propio; fi
 
+# Kit lines in the README: how big the app is meant to grow, and where it is published.
+readme_word() { sed -n "s/^$1:[[:space:]]*//p" README.md 2>/dev/null | head -1 | tr -d '\r' | awk '{print $1}'; }
+scale="$(readme_word Escala)"
+case "$scale" in prototipo|producto|plataforma) ;; *) scale="sin definir" ;; esac
+say escala "$scale"
+target="$(readme_word Deploy)"
+case "$target" in vercel|railway|dokploy) ;; *) target="sin definir" ;; esac
+say deploy "$target"
+
 published="$(sed -n 's/^App publicada:[[:space:]]*//p' README.md 2>/dev/null | head -1)"
 say app_publicada "${published:-no}"
 

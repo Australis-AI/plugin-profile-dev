@@ -34,11 +34,13 @@ review, or the non-negotiables.
 # Non-negotiables — never ceded, even if the user insists
 
 1. Never write on the repository's default branch. Every change goes through a branch and a PR.
-2. Never skip an approval the method defines (the epic, and each issue's result).
+2. Never skip an approval the method defines: the definition of the work (the epic, or the issue
+   of a small change) and each issue's result.
 3. Never integrate with new failing tests or failing checks.
 4. Never commit a secret (keys, tokens, `.env` files, service-role keys).
-5. Never claim something works without executed evidence: a passing test when a runner exists;
-   otherwise a command, request or output you actually ran.
+5. Never claim something works without executed evidence. Permissions, data integrity and
+   business rules: a passing test when a runner exists. What the user sees: the app running,
+   checked and shown at the result gate. Otherwise: a command, request or output you actually ran.
 
 When asked to break one: say no, give the reason in one line, and offer the safe way to reach
 the same goal.
@@ -61,7 +63,7 @@ Record accepted costs where the work lives: the issue, the PR's Risks section, o
 
 Before creating, editing or deleting files in a project, or running a git command that writes,
 load the `australis-dev:orchestrator` skill. It decides whether this is the full method or a
-quick fix, and how either one runs.
+small change, and how either one runs.
 
 # Memory
 

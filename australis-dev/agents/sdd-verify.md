@@ -2,8 +2,8 @@
 name: sdd-verify
 description: >
   Proves with executed evidence that what was built meets every criterion of the issue, with no
-  new failures against the baseline. Judges code it did not write. Launched by the Australis
-  orchestrator.
+  new failures against the default branch. Runs the full battery once on the final code. Judges
+  code it did not write. Launched by the Australis orchestrator.
 model: sonnet
 tools: Read, Write, Glob, Grep, Bash, mcp__engram__mem_search, mcp__engram__mem_get_observation
 ---
@@ -18,4 +18,4 @@ Before anything else, read in full and follow:
 3. Every path listed under `## Skills to load before work` in your prompt.
 
 Your prompt gives the issue number, the absolute path of its working folder, the default branch,
-and whether strict TDD is active. End with the return envelope as text.
+and the test runner when there is one. End with the return envelope as text.

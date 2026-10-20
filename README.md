@@ -52,6 +52,7 @@ La mayoría de las veces no hace falta ningún comando: le decís qué querés c
 | `/seguir` | Retomar donde quedaste, en otra sesión o en otra compu |
 | `/publicar` | Poner tu app en internet (la primera vez te guío; después se publica sola) |
 | `/juzgar` | Revisión a fondo: dos revisores ciegos sobre el mismo cambio |
+| `/auditar` | Revisar el proyecto entero (o un área): seguridad, cómo está armada la base de datos, si conviene una API, y qué conviene hacer distinto. Lo que elijas se vuelve issues |
 | `/preparar` | Dejar la compu lista (una vez); `/preparar nivel` cambia cómo trabajamos |
 | `/chequeo` | Ver si algo se rompió, y qué hacer exactamente |
 
@@ -68,15 +69,49 @@ Es la forma de trabajar de un equipo profesional, y el kit la opera por vos:
 2. **Acordar.** Armo una **épica** en GitHub: el objetivo y la lista de pasos. Cada paso es un
    **issue** con su "listo cuando". La aprobás una vez.
 3. **Construir.** Cada issue se hace en su propia **rama**, con pruebas y una revisión automática
-   hecha por alguien que no escribió el código.
+   hecha por alguien que no escribió el código. Las pruebas automáticas cubren lo que no se ve
+   usando la app (permisos, que no se pierdan ni se rompan datos, reglas y cálculos); lo que se
+   ve, lo probás vos con la app andando.
 4. **Probar.** Te muestro cada "listo cuando" con ✅ o ❌ y su evidencia, y la app andando para
-   que la pruebes.
+   que la pruebes. Todas las pruebas corren una sola vez, sobre la versión final; antes de
+   integrar se repiten solo si el código cambió o si la versión principal se movió en el medio.
 5. **Integrar.** Si está bien, lo sumo a la versión principal con un **pull request**. Nunca se
    escribe directo en `main`.
 6. **Publicar.** La app sale a internet siempre desde la versión principal.
 
-Hay **dos momentos** en los que frena y te pregunta: al aprobar la épica y al ver cada resultado.
-Si en el medio aparece algo que cambia lo acordado, también frena.
+Hay **dos momentos** en los que frena y te pregunta: al aprobar lo que se va a hacer (la épica, o
+el issue si es un cambio chico) y al ver cada resultado. Si en el medio aparece algo que cambia lo
+acordado, también frena.
+
+### Escala y dónde se publica
+
+Al planificar se definen dos cosas que cambian cómo se construye:
+
+- **Escala.** *Prototipo* (para probar una idea), *producto* (lo usa un negocio todos los días) o
+  *plataforma* (varios tipos de usuario, integraciones, o más de una forma de entrar: web, una
+  CLI, un MCP, otros sistemas). Una plataforma nace con una API en el medio; un prototipo o un
+  producto no la necesitan.
+- **Dónde se publica.** Vercel por defecto; Railway, o infraestructura propia (un servidor con
+  Dokploy) cuando se elige. En Vercel y Railway se publica siempre con **GitHub Actions**: cada
+  integración a la versión principal se publica sola, la haga quien la haga, sin pagar un lugar
+  en Vercel por cada persona que integra.
+
+Las dos quedan anotadas en el README del proyecto.
+
+### Cambios chicos
+
+Un cambio chico (un texto, un color, un arreglo, un campo, un filtro) no pasa por todo el método,
+pero sí por la definición:
+
+1. Te muestro un issue con uno a tres "listo cuando" y lo aprobás. No hay entrevista ni épica.
+2. Lo construyo en una rama, con sus pruebas, sin las etapas de exploración y diseño.
+3. Corro todas las pruebas una sola vez, sobre la versión final.
+4. Pasa por revisión automática solo si toca datos guardados, el servidor o las claves.
+5. Te muestro el resultado con su evidencia y decidís si se integra.
+
+Es chico si se resuelve en unos tres archivos o menos, sin cambiar la base de datos, sin sumar
+dependencias ni servicios y sin tocar el inicio de sesión ni los permisos. Si en el camino crece,
+te aviso y sigue como un paso completo.
 
 ### Cómo te habla
 
@@ -94,6 +129,9 @@ se integra algo que rompe pruebas y no se da nada por terminado sin evidencia.
 - **En GitHub:** la épica, los issues, los pull requests y toda la historia.
 - **En tu repo:** el código y la documentación que perdura (README, decisiones importantes).
 - **En `.australis/`:** archivos de trabajo temporales del paso en curso. No se suben a GitHub.
+- **En `.env.local`:** las claves de tu app y las del kit (leer tu base de datos, publicar desde
+  GitHub). Ese archivo nunca se sube. Las secretas las pegás vos ahí: el kit no te las pide por
+  el chat ni las muestra.
 
 ## Actualizar
 

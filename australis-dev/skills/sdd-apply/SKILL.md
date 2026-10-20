@@ -26,8 +26,8 @@ Your prompt says which one:
 
 ## Inputs
 
-`issue.md` (the criteria), `contexto.md` (commands), `baseline.md`, `design.md` and `explore.md`
-when they exist, `apply-progress.md` when continuing, and the code you will touch. Read the
+`issue.md` (the criteria), `contexto.md` (commands), `design.md` and `explore.md` when they
+exist, `apply-progress.md` when continuing, and the code you will touch. Read the
 surrounding code before writing, so you match the project's patterns.
 
 ## Steps
@@ -36,8 +36,9 @@ surrounding code before writing, so you match the project's patterns.
 2. **Tasks.** With design: its Tasks section. Without design: write 2–6 tasks, each tracing to a
    criterion, into `apply-progress.md` before coding.
 3. **Implement.**
-   - With `STRICT TDD MODE IS ACTIVE`: load `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/strict-tdd.md`
-     and follow its cycle for every task.
+   - With `TEST RUNNER: <command>. ESSENTIAL TESTS ONLY.` in your prompt: load
+     `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/essential-tests.md`. It decides which tasks get a test
+     and how.
    - Otherwise, for each task: read the criterion, write the code, and record the runtime check
      that shows it works.
    - Never freelance away from `design.md`. If the design is wrong, implement what you can and
@@ -72,7 +73,7 @@ Mode: <normal | continuation | correction>
 ## Commits
 - <sha> <message>
 
-<with strict TDD: the TDD Cycle Evidence and Test Summary sections from strict-tdd.md>
+<with a test runner: the Tests section from essential-tests.md>
 
 ## Runtime checks (no runner)
 | Criterion | What was run | Result |

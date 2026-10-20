@@ -21,11 +21,10 @@ It is ignored by git and disposable: GitHub holds the durable record.
 |---|---|---|---|
 | `issue.md` | orchestrator | all | Spanish (the issue as written on GitHub) |
 | `contexto.md` | orchestrator | all | key: value lines from `contexto.sh` |
-| `baseline.md` | orchestrator | apply, verify | test failures that existed before any change |
 | `explore.md` | explore | design, apply | English |
 | `design.md` | design | apply, verify | English |
 | `apply-progress.md` | apply | verify | English |
-| `verify.md` | verify | orchestrator | English, plus the Spanish gate lines |
+| `verify.md` | verify | orchestrator | English, plus the Spanish gate lines; holds the tested commit |
 
 **The contract is the issue.** Its "Listo cuando" criteria are the acceptance criteria, verbatim.
 Its "Restricciones técnicas" section, when present, binds every technical decision. Never edit
@@ -39,8 +38,10 @@ Take commands only from `contexto.md`: `comando_test`, `comando_build`, `comando
 `comando_dev`, `gestor_paquetes`. A value of `ninguno` or empty means the project has none — never
 invent one.
 
-- **Strict TDD** applies when your prompt says `STRICT TDD MODE IS ACTIVE` (the project has a test
-  runner). Apply and verify then load their strict-TDD module.
+- **Essential tests** apply when your prompt says `TEST RUNNER: <command>. ESSENTIAL TESTS ONLY.`
+  (the project has a test runner). Apply and verify then load their essential-tests module:
+  tests for permissions, data integrity, business rules and fixed bugs; none for what the user
+  sees.
 - **Without a runner**, evidence is a command, request or output you actually ran, recorded with
   what you ran and what it returned.
 - Long commands (install, build, full suite): use a timeout of 600000.

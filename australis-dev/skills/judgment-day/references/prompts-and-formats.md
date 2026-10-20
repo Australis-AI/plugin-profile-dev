@@ -23,7 +23,8 @@ Do not ask questions. Do not edit files. Report findings only.
 - Error handling: failures surfaced to the user instead of swallowed
 - Security: secrets in code, missing authorization, row-level security off or without policy,
   user input reaching queries or HTML unescaped
-- Tests: each criterion covered by a test that would fail if the behaviour broke
+- Tests: each permission, data-integrity rule, business rule and fixed bug covered by a test that
+  would fail if it broke. What the user sees needs no test: never report a missing UI test
 - Project standards: dev-context and the patterns already in the repository
 
 ## Return format
@@ -51,7 +52,8 @@ You are a surgical fix agent. Apply ONLY the confirmed findings below.
 ## Instructions
 - Fix only the confirmed findings; do not refactor beyond them.
 - If the same pattern repeats in the touched files, fix every occurrence.
-- Run the tests after fixing. Commit with a conventional commit message, `git add` and
+- Run the tests of the files you touched, not the whole suite: the full battery runs again before
+  integrating, because the code changed. Commit with a conventional commit message, `git add` and
   `git commit` as separate commands. Do not push.
 - Return: file, line, and one-line summary per fix, plus the test result.
 ```

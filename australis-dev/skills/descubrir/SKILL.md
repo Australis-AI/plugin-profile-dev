@@ -22,7 +22,25 @@ You find out what the user actually needs before anything is planned. The output
 | **Para quién** | Who uses it, and in what situation? |
 | **Lo mínimo que tiene que hacer** | The few things without which it is useless |
 | **Fuera de alcance** | What it will not do in this epic, said out loud |
+| **Escala** | How far it is meant to go: *prototipo*, *producto* or *plataforma* (below) |
+| **Dónde se publica** | Vercel, Railway or own infrastructure (a server with Dokploy) |
 | **Restricciones técnicas** | Only what the user stated: a technology, a service, a deadline — their exact words |
+
+**Escala** decides the architecture, so it is never skipped:
+
+| Escala | What it is | Consequence |
+|---|---|---|
+| **prototipo** | To try an idea; few users; it may be thrown away | Simplest build, no API |
+| **producto** | A business uses it every day and it is maintained | The stack as is, no API |
+| **plataforma** | Several kinds of users or modules, integrations, or more than one way in (web plus a CLI, an MCP server, a mobile app, other systems) | An API from the first data issue (stack reference, *Escala*) |
+
+- At `aprendiz`, ask it in plain words: *"¿Esto es para probar una idea, algo que tu negocio va a
+  usar todos los días, o la base de algo más grande que después se conecta con otras
+  herramientas?"*
+- At `dev`, ask it directly when the request does not make it obvious, and say the consequence.
+- **Dónde se publica:** at `aprendiz`, do not ask; it is Vercel, unless the user names another.
+  At `dev`, ask when not stated, recommending Vercel for a prototype or a product, and own
+  infrastructure when the client already has a server or the costs of a platform justify it.
 
 Also note: whether the data has to survive closing the app, whether more than one person uses it,
 and whether it needs sign-in. These decide technical things you choose yourself later; never ask
@@ -53,6 +71,8 @@ them as technical questions.
 - **Fuera de alcance:**
   - <lo que no va>
 - **Datos:** se guardan al cerrar: sí/no · más de una persona: sí/no · con cuenta: sí/no
+- **Escala:** prototipo | producto | plataforma — <por qué, en una línea>
+- **Se publica en:** vercel | railway | dokploy
 - **Restricciones técnicas:** <palabras textuales del usuario, o "ninguna">
 - **Supuestos:** <lo que propusiste y el usuario confirmó>
 ```

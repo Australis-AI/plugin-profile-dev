@@ -24,8 +24,9 @@ entender ─▶ acordar ─▶ construir ─▶ probar ─▶ integrar ─▶ pu
 - **GitHub is the source of truth.** The epic and its issues hold the WHAT (Spanish, approved by
   the user). The PR holds the HOW and the evidence (English). The repository keeps only permanent
   documentation (README, ADRs, runbooks).
-- **Two approvals only:** the epic, once; and the result of each issue, before it is integrated.
-  Stop before building only when an issue changes scope or needs a decision from the user.
+- **Two approvals only:** the definition of the work, once (the epic, or the issue of a small
+  change); and the result of each issue, before it is integrated. Stop before building only when
+  an issue changes scope or needs a decision from the user.
 - **Local working files are ephemeral:** `.australis/trabajo/<N>/` per issue, ignored by git
   through `.australis/.gitignore` containing `*`. Create both when missing. Never commit them.
 - **Stage names** (say them at `aprendiz`, see the teaching material): entender, acordar,
@@ -44,7 +45,7 @@ It prints `key: value` lines: `nivel`, `onedrive`, `repo`, `firma_git`, `remoto`
 `repo_github`, `rama_por_defecto`, `rama_actual`, `commits_en_rama_por_defecto`,
 `commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `epica_abierta`, `pr_de_la_rama`,
 `comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`,
-`app_publicada`.
+`escala`, `deploy`, `app_publicada`.
 Read it silently. Re-run it after any step that changes branches or GitHub state.
 
 Stop and send the user to `/preparar` (one line) when a write is needed and `github` is
@@ -55,15 +56,15 @@ Stop and send the user to `/preparar` (one line) when a write is needed and `git
 | The user asks for | Route |
 |---|---|
 | A question, an explanation, running tests, reading code | Answer directly. No branch, nothing written. |
-| A small change: copy, a color, a typo, one obvious fix | **Quick fix** |
+| A change that passes the small-change entry test: copy, a color, a fix, a field, a filter | **Small change** |
 | Something new: an app, a feature, several steps | **New work** (`/nuevo`) |
 | "hacé el #4", "construí lo que sigue", "seguí con la épica" | **Build an issue** (`/construir`) |
 | "seguí", "¿dónde quedamos?", a new session mid-issue | **Resume** (`/seguir`) |
 | "publicala", "subila a internet", "¿está publicada?" | **Publish** (`/publicar`) |
+| "auditá", "¿qué se puede mejorar?", "revisá el proyecto entero" | **Audit** (`/auditar`) |
 
-Grey zone: start as a quick fix. If it grows past about three files, or needs a decision from the
-user, stop and turn it into an issue of the open epic (*"Esto es más grande de lo que parecía: lo
-sumo como un paso de la épica y lo hacemos ordenado."*).
+Grey zone: start as a small change. If it stops passing the entry test while it is built, it
+becomes a full issue (see **Small change → It grew**).
 
 ## Actions with effects happen here, never in a sub-agent
 
@@ -125,9 +126,10 @@ issues. For a new app (case B or C), issue #1 is always *"Base del proyecto"*.
 
 ### 4. Gate — the user approves the epic
 
-Show the epic as the user will read it: goal, scope, out of scope, and the numbered list of issues
-with their "listo cuando" criteria. At `dev`, add the technical approach and main risks in up to
-three lines. Close with: *"¿La aprobás así, o cambiamos algo?"* Then **stop and wait**.
+Show the epic as the user will read it: goal, scale and where it is published, scope, out of
+scope, and the numbered list of issues with their "listo cuando" criteria. At `dev`, add the
+technical approach and main risks in up to three lines, including what the scale implies (a
+*plataforma* gets an API from the first data issue). Close with: *"¿La aprobás así, o cambiamos algo?"* Then **stop and wait**.
 
 - Changes requested: apply them to the draft and show the gate again.
 - Approved: write to GitHub, in this order —
@@ -150,6 +152,8 @@ The number given, or the first open issue in the task list of the open epic (`gh
 (`gh issue list`). More than one open epic: ask which. At `dev`, building an issue outside the
 epic adds it to the epic's task list.
 
+An issue with the label `cambio-chico` is built as a **Small change**, from its step 2.
+
 ### 2. Branch
 
 1. If `cambios_sin_commitear` > 0 and the current branch is not this issue's branch, ask once:
@@ -166,15 +170,15 @@ epic adds it to the epic's task list.
 - `.australis/trabajo/<N>/issue.md`: `gh issue view <N> --json number,title,body,comments` written
   as markdown.
 - `.australis/trabajo/<N>/contexto.md`: the context script output.
-- **Baseline:** when `comando_test` is not `ninguno` and `baseline.md` does not exist, run the test
-  command once on the fresh branch (timeout 600000) and record which tests fail, or *"sin fallas"*.
-  Failures that exist here are inherited; only new ones block integration.
+- **No baseline run up front.** The full battery runs once per version of the code, in verify.
+  When it finds failures, verify runs only those tests on the default branch to tell inherited
+  from new; only new ones block integration.
 
 ### 4. Route the issue
 
 **Base of a new app.** When the issue is *"Base del proyecto"* and there is no `package.json`,
 follow the **Issue #1** section of `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` in this
-thread instead of routing to explore, design and apply. Verify, review, PR and the gate run as
+thread instead of routing to explore, design and apply. Review, verify, PR and the gate run as
 usual.
 
 **Saved data.** When an issue needs data that survives closing the app and `.env.local` has no
@@ -186,8 +190,8 @@ Otherwise, judge the route now, not when the issue was written:
 
 | Route | When |
 |---|---|
-| **Direct** — apply → verify | Known bug, small well-understood change, the criteria fully describe the result, no open design question |
-| **Explore first** — explore → design (only if needed) → apply → verify | Architecture decisions, several viable approaches, unclear scope, unfamiliar code, or the user flagged doubts |
+| **Direct** — apply → review → verify | Known bug, small well-understood change, the criteria fully describe the result, no open design question |
+| **Explore first** — explore → design (only if needed) → apply → review → verify | Architecture decisions, several viable approaches, unclear scope, unfamiliar code, or the user flagged doubts |
 
 If genuinely ambiguous: at `dev`, one question (*"a) Voy directo b) Exploro primero"*); at
 `aprendiz`, explore and say so in one line.
@@ -202,17 +206,18 @@ Delegate with the model table below. Every launch passes: the issue number, the 
 exact paths `${CLAUDE_PLUGIN_ROOT}/skills/dev-context/SKILL.md` and
 `${CLAUDE_PLUGIN_ROOT}/skills/_shared/sdd-phase-common.md`, plus
 `${CLAUDE_PLUGIN_ROOT}/skills/stack-australis/SKILL.md` when the context says `stack: australis`.
-When `comando_test` is not `ninguno`, add `STRICT TDD MODE IS ACTIVE. Test runner: <comando_test>.`
+When `comando_test` is not `ninguno`, add `TEST RUNNER: <comando_test>. ESSENTIAL TESTS ONLY.`
+Tests cover permissions, data integrity, business rules and fixed bugs; what the user sees is
+checked with the app running at the gate.
 
 - **explore** → `explore.md`, including whether design is needed.
 - **design** (when needed) → `design.md`. At `dev`, show its Decisions table (chosen and rejected,
   up to 8 lines) before apply and continue without waiting.
 - **apply** → code, commits on the branch, `apply-progress.md`. After each apply return, push:
   `git push -u origin HEAD`. Show one progress line per criterion completed.
-- **verify** → `verify.md`: per criterion ✅/❌ with executed evidence, new failures vs baseline.
 
-If verify fails: launch apply in **correction mode** with `verify.md` as input, then verify once
-more. If it still fails, go to the gate and show the ❌ with its options.
+Verify does not run here. It runs once, in step 7, on the final code: after the review and the
+documentation, so neither of them forces a second battery.
 
 ### 6. Review
 
@@ -223,47 +228,65 @@ By `tipo_de_repo`, never by level:
   `git diff <default>...HEAD` against the issue criteria and dev-context. It never asks the user
   anything.
   1. For each finding, confirm it yourself: open the cited code, or write a failing test.
-  2. Confirmed findings → one apply correction batch → verify again → push.
+  2. Confirmed findings → one apply correction batch (it runs the tests of what it touched) →
+     push. The full battery comes later, in verify.
   3. Unconfirmed findings go to the PR's Risks at `dev`; at `aprendiz` mention them only when they
      are about security.
+  4. Record what was found, fixed and left in `.australis/trabajo/<N>/review.md`.
 - **equipo:** no automatic review. The PR asks for human review and you never merge it.
 
-### 7. Pull request
+### 7. Documentation, verify and pull request
 
-Before the PR, keep permanent documentation current, on the same branch:
-- **ADRs:** for each entry under *ADR candidates* in `design.md`, write one with
-  `${CLAUDE_PLUGIN_ROOT}/skills/adr/SKILL.md`.
-- **README and runbook:** if the change adds or renames an environment variable, changes how to
-  run, test or publish, or adds an external service, update them with
-  `${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`.
+1. **Documentation first**, on the same branch, so verify covers the final code:
+   - **ADRs:** for each entry under *ADR candidates* in `design.md`, write one with
+     `${CLAUDE_PLUGIN_ROOT}/skills/adr/SKILL.md`.
+   - **README and runbook:** if the change adds or renames an environment variable, changes how
+     to run, test or publish, or adds an external service, update them with
+     `${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`.
 
-Commit those (`docs(...)`) and push. Then build `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
-(Context, Decisions, Risks, Verification, `Closes #N`) and run `gh pr create --base <default>
---title "<conventional title>" --body-file <pr.md>`, or `gh pr edit --body-file` if it exists.
+   Commit those (`docs(...)`) and push.
+2. **verify** → `verify.md`: per criterion ✅/❌ with executed evidence, new and inherited
+   failures, and the commit it tested. This is the one full battery for this version of the code.
+   If verify fails: launch apply in **correction mode** with `verify.md` as input, then verify
+   once more. If it still fails, go to the gate and show the ❌ with its options.
+3. Build `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
+   (Context, Decisions, Risks, Verification, `Closes #N`) and run `gh pr create --base <default>
+   --title "<conventional title>" --body-file <pr.md>`, or `gh pr edit --body-file` if it exists.
 
 ### 8. Gate — "Esto anda" (probar)
 
 Show, in Spanish:
-1. The issue's "listo cuando" criteria, verbatim, each with ✅ or ❌ and one line of evidence in
-   plain words.
-2. The app running, when `comando_dev` exists: start it in the background (for the australis
+1. The app running, when `comando_dev` exists: start it in the background (for the australis
    stack, append `-- --hostname 127.0.0.1`), read the URL from its output, and give the link. Stop
    the server when the gate closes and before any package install.
+2. The issue's "listo cuando" criteria, verbatim, each with ✅ or ❌ and one line of evidence in
+   plain words. Criteria marked *"a ver en la app"* have no test on purpose: request the route on
+   the running app and check what the criterion describes, then show ✅ with *"lo ves en <link>"*
+   or ❌. The user looking at it is the final evidence.
 3. The options, answered by writing in the chat:
    - `integrar` — not offered in a team repo. When `app_publicada` is not `no`, call it
      *"integrar (también publica)"*.
-   - `corregir` — a correction batch on the same branch, then back to this gate.
+   - `corregir` — a correction batch on the same branch, the battery again (the code changed),
+     then back to this gate.
    - `dejar en la rama`.
 
 In a team repo, instead of `integrar`: *"Queda esperando la revisión de tu equipo en el PR."*
 
 **Integrating:**
-1. If `gh pr checks <pr>` shows failures that are not in the baseline, do not merge; offer
-   `corregir`.
-2. `gh pr merge <pr> --squash --delete-branch`, then `git checkout <default>` and `git pull
+1. **What gets merged is what was tested.** The battery runs again only when the code that would
+   land on the default branch is not the code it tested:
+   - `git rev-parse HEAD` must equal the tested commit in `verify.md`. If not, run the battery
+     again (verify; in a small change, its step 4).
+   - `git fetch origin`, then `git merge-base --is-ancestor origin/<default> HEAD`. If it
+     succeeds, the default branch has not moved: the merge produces exactly the tested code, and
+     nothing runs again. If it fails, something else was integrated meanwhile: `git merge
+     origin/<default>` into the branch (a conflict is a correction batch), push, run the battery
+     again, and integrate only with it green.
+2. If `gh pr checks <pr>` shows failures that are not inherited, do not merge; offer `corregir`.
+3. `gh pr merge <pr> --squash --delete-branch`, then `git checkout <default>` and `git pull
    --ff-only`, then delete `.australis/trabajo/<N>/`.
-3. If it was the last open issue of the epic, close the epic with a one-line comment.
-4. Offer the next issue in one line: *"¿Seguimos con el #M: <título>?"*
+4. If it was the last open issue of the epic, close the epic with a one-line comment.
+5. Offer the next issue in one line: *"¿Seguimos con el #M: <título>?"*
 
 **Integrating with an unmet criterion** (the user wants it anyway): create issue #M in the epic
 with that criterion, mark its test `it.todo('<criterio> (#M)')` (or the runner's skip
@@ -271,31 +294,102 @@ equivalent), commit, push, note it in the PR's Risks, then integrate with the su
 
 ---
 
-## Quick fix
+## Small change
 
-1. Always from the default branch updated: if on an issue branch with changes, commit and push
-   those first. Then `git checkout <default>`, `git pull --ff-only`, `git checkout -b fix/<slug>`.
-2. Make the change. Collect evidence: a test when the behaviour is testable, otherwise the
-   command, output or screenshot you actually ran.
-3. Commit, push, the same single reviewer (skip in a team repo), open the PR with `branch-pr`.
-4. Show the result and ask to integrate. At `dev`, "…y mergealo" in the same request counts as
-   the confirmation; checks, tests and the guard still apply.
+The definition is never skipped; the machinery is. A small change is one issue with its own
+"listo cuando", built in this thread without phase agents, with the full battery run once on the
+final code.
 
-"Guardá esto" means commit and push on the current issue branch, or a quick fix when on the
-default branch. Something small the user postpones becomes one line in the open epic's body, not
-a file.
+### Entry test — all must hold
+
+- The result fits in 1 to 3 "listo cuando" criteria.
+- It touches about three files or fewer.
+- No database schema change and no migration.
+- No new dependency and no new external service.
+- No change to sign-in, permissions or row-level security.
+
+If one fails, or you cannot tell without exploring the code, it is not a small change: something
+new goes to **New work**; a step of an open epic goes to **Build an issue**.
+
+### 1. Define — gate
+
+1. Context (Step 0). If on an issue branch with changes, commit and push those first.
+2. Draft the issue with `${CLAUDE_PLUGIN_ROOT}/skills/epica-issues/SKILL.md`, section *A small
+   change*.
+3. Show it as the user will read it (title, "Qué", the criteria) and close with *"¿Es esto lo que
+   querés?"*. **Stop and wait.** Changes requested: apply them and show it again.
+4. Approved: `gh label create cambio-chico --color C2E0C6 --force`, then `gh issue create --title
+   "<título>" --label cambio-chico --body-file <archivo>`, reading the number from the URL. It
+   does not go into an epic.
+
+### 2. Build
+
+1. Branch exactly as **Build an issue** step 2. Working folder: `issue.md` and `contexto.md`
+   only. No baseline run up front.
+2. Work in this thread. No explore, design, apply or verify agents.
+   - With a test runner, follow `${CLAUDE_PLUGIN_ROOT}/skills/sdd-apply/essential-tests.md`: a test
+     first only for permissions, data integrity, business rules or the bug being fixed. Run only
+     those test files while working.
+   - What the user sees (copy, styling, a screen): no test; it is checked with the app running at
+     the gate. Config: the evidence is a command or output you actually ran.
+3. Commit per work unit (`git add` and `git commit` as separate commands), then
+   `git push -u origin HEAD`.
+
+**It grew.** If the change stops passing the entry test, stop and say it in one line: *"Esto es
+más grande de lo que parecía: lo sigo como un paso completo, con todas sus revisiones."* Run
+`gh issue edit <N> --remove-label cambio-chico`, keep the issue and the branch, add the issue to
+the open epic's task list when there is one, and continue in **Build an issue** from step 3.
+
+### 3. Review — only when the change touches sensitive code
+
+In a one-person repo, run the single blind reviewer of **Build an issue** step 6 only when the
+diff writes or deletes saved data, adds or changes a server route, or touches environment
+variables. Otherwise skip it. A team repo never gets an automatic review.
+
+The review goes before the battery, so its fixes are covered by the one battery run.
+
+### 4. Battery — once, on the final code
+
+Run the test, build and lint commands from the context (timeout 600000) on the final commit.
+
+- All green: continue.
+- Failures: check out the default branch, run only the failing tests there, and come back
+  (`git checkout <default>`, run, `git checkout -`). Failing there too: inherited, note them for
+  the PR's Risks. Failing only on the branch: new. Fix, commit, push, and run the battery again.
+
+Record the run in `.australis/trabajo/<N>/verify.md`: the tested commit (`git rev-parse HEAD`),
+each criterion with its evidence, and the result. Integration reads the tested commit from it.
+
+### 5. PR and gate
+
+1. README and runbook only when the change adds an environment variable or changes how to run,
+   test or publish (`${CLAUDE_PLUGIN_ROOT}/skills/readme-runbook/SKILL.md`). No ADR.
+2. `.australis/trabajo/<N>/pr.md` with `${CLAUDE_PLUGIN_ROOT}/skills/branch-pr/SKILL.md`
+   (`Closes #N`; Verification: each criterion with its evidence and the battery result), then
+   `gh pr create`.
+3. The **"Esto anda"** gate and integration of **Build an issue** step 8, unchanged. At `dev`,
+   "…y mergealo" in the original request counts as the confirmation to integrate; checks, the
+   battery and the guard still apply.
+
+"Guardá esto" means commit and push on the current issue branch. On the default branch, it is a
+small change whose definition describes what was changed. Something small the user postpones
+becomes one line in the open epic's body, not a file.
 
 ## Resume — `/seguir`
 
-1. Context. If on an issue branch (`feat/<N>-…` or `fix/<N>-…`):
+1. Context. If on an issue branch (`feat/<N>-…` or `fix/<N>-…`) whose issue has the label
+   `cambio-chico` (`gh issue view <N> --json labels`), resume the **Small change**: no commits of
+   its own → Build; commits and no PR → Review and battery; PR open → the result gate.
+   Any other issue branch:
 
    | State | Next step |
    |---|---|
-   | No `.australis/trabajo/<N>/` (other machine) | Rebuild `issue.md` and `contexto.md`; if the branch has commits, run verify |
+   | No `.australis/trabajo/<N>/` (other machine) | Rebuild `issue.md` and `contexto.md`; if the branch has commits, review (one-person repo), then verify |
    | No `explore.md`/`apply-progress.md` | Route the issue |
    | `apply-progress.md` with pending tasks | Apply continuation |
-   | No `verify.md`, or code changed after it | Verify |
-   | Verified, no PR | Review and PR |
+   | No `review.md` in a one-person repo | Review |
+   | No `verify.md`, or `HEAD` is not its tested commit | Documentation and verify |
+   | Verified, no PR | PR |
    | PR open, `CHANGES_REQUESTED` | Read `gh pr view --comments`, correction batch |
    | PR open | Result gate |
 
@@ -310,20 +404,43 @@ Production always comes from the default branch, trunk-based: nothing is deploye
 branch, and staging (where it exists) follows the default branch too, so production receives the
 same commit that was already seen in staging.
 
+**Published by GitHub Actions.** On Vercel and Railway, production is deployed by a workflow on
+every push to the default branch, never by the platform's own Git integration. With Vercel's,
+only commits whose author is a member of the Vercel team get built (a paid seat each), so a merge
+by anyone else stays unpublished. With Actions, whoever integrates publishes.
+
 1. Context. If `cambios_sin_commitear` > 0 or the current branch has unintegrated work, say it in
    one line and offer to finish that issue first.
-2. Route by owner of `repo_github`:
-   - **`Australis-AI/…` (Australis infrastructure):** read the deploy SOP from
+2. Where it is published, from `deploy`:
+   - **`sin definir`:** for `Australis-AI/…` repositories it is `dokploy`. Otherwise, at
+     `aprendiz`, it is `vercel`; say why in one line (*"Lo publico en Vercel: es lo más simple
+     para empezar y no tiene costo mientras sea para uso personal."*). At `dev`, ask once:
+     *"¿Dónde se publica? a) Vercel (recomendado para un prototipo o un producto) b) Railway
+     c) Infraestructura propia con Dokploy (un servidor tuyo o del cliente)"*, with one line on
+     when each one fits. The answer becomes the README line `Deploy: <vercel|railway|dokploy>`,
+     committed with the first publish.
+   - **`vercel`:** follow `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
+   - **`railway`:** follow `${CLAUDE_PLUGIN_ROOT}/skills/deploy-railway/SKILL.md`.
+   - **`dokploy`** (own infrastructure: a server running Dokploy): read the deploy SOP from
      `$CEREBRO_DIR/australis/dev/reference/deploy-dokploy.md` (`CEREBRO_DIR` is an environment
      variable on Agus's machines). If the variable or the file is missing, say *"Este repo se
-     publica con el procedimiento interno de Australis, que no está en esta compu."* and stop.
-     Otherwise follow the SOP with these method rules on top: PRs always target the default
-     branch; the staging app tracks the default branch; production is promoted with the same
-     commit; production migrations are manual with a backup. Where the SOP still describes a
-     `staging` branch, follow the trunk rules and tell Agus the SOP needs updating. Never copy
-     server addresses, hosts or keys from the SOP into the repository, an issue or a PR.
-   - **Anything else (clients, Australis stack):** follow
-     `${CLAUDE_PLUGIN_ROOT}/skills/deploy-vercel-supabase/SKILL.md`.
+     publica en infraestructura propia con el procedimiento de Australis, que no está en esta
+     compu."* and stop. Otherwise follow the SOP with these method rules on top: PRs always
+     target the default branch; the staging app tracks the default branch; production is
+     promoted with the same commit; production migrations are manual with a backup. Where the
+     SOP still describes a `staging` branch, follow the trunk rules and tell Agus the SOP needs
+     updating. Never copy server addresses, hosts or keys from the SOP into the repository, an
+     issue or a PR.
+
+Tokens for Actions follow one rule: the user pastes them into `.env.local` (never into the chat),
+you check that the file is ignored by git first (`git check-ignore -q .env.local`), and you pass
+them to `gh secret set` from that file without printing them.
+
+## Audit — `/auditar [área]`
+
+Follow `${CLAUDE_PLUGIN_ROOT}/skills/auditar/SKILL.md`. It is read-only until the user picks
+findings; what they pick becomes a small change or an epic of improvements, and from there the
+method runs as usual.
 
 ---
 
@@ -338,6 +455,7 @@ Pass `model` in every Agent call.
 | apply | `australis-dev:sdd-apply` | sonnet |
 | verify | `australis-dev:sdd-verify` | sonnet |
 | review | `australis-dev:jd-judge-a` | sonnet |
+| audit | `australis-dev:auditor`, one per dimension | sonnet |
 | other | — | sonnet |
 
 If a namespaced name does not resolve, list the agent types and use the one whose suffix

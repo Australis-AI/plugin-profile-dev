@@ -1,6 +1,6 @@
 ---
 name: epica-issues
-description: "Redactar la épica y sus issues ordenados en GitHub, con criterios de 'listo cuando' verificables. Se usa después de descubrir, o para sumar un issue a una épica abierta."
+description: "Redactar la épica y sus issues ordenados en GitHub, con criterios de 'listo cuando' verificables. Se usa después de descubrir, para sumar un issue a una épica abierta, o para definir un cambio chico."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
@@ -23,7 +23,8 @@ and integrated on its own. Both are written in **Spanish**, for the person who a
 2. **Form: "Cuando …, entonces …"** whenever the criterion is a behaviour. Plain statements are
    fine for things that just exist (*"La pantalla de inicio muestra el total del mes."*).
 3. **Each criterion is checkable by running something**: a test, a request, or looking at the app.
-4. **3 to 6 criteria per issue.** More than 6 means the issue is two issues.
+4. **3 to 6 criteria per issue** (1 to 3 for a small change). More than 6 means the issue is two
+   issues.
 5. **One issue = one step the user can see working.** Order issues so each one builds on the
    previous and leaves the app usable.
 6. **Technical constraints** go in their own section, in the user's exact words. They are the one
@@ -62,6 +63,22 @@ Dejar la app creada, corriendo y lista para construir encima.
 <sólo si el usuario las dijo, textuales; si no, omitir la sección>
 ```
 
+## A small change
+
+A standalone issue: no epic, no discovery. Same body and the same writing rules, with 1 to 3
+criteria and the label `cambio-chico`. The definition is short, not optional: it is still what
+the result is checked against.
+
+```markdown
+**Título:** Botón de guardar en azul
+
+## Qué
+El botón principal del formulario se ve en el azul de la marca.
+
+## Listo cuando
+- [ ] Cuando abro el formulario, entonces el botón de guardar se ve azul.
+```
+
 ## Epic body
 
 Title: the product or feature name, no prefix (*"Gastos personales"*). Label: `epica`.
@@ -72,6 +89,9 @@ Title: the product or feature name, no prefix (*"Gastos personales"*). Label: `e
 
 ## Para quién
 <quién y en qué situación>
+
+## Escala
+<prototipo | producto | plataforma> — <por qué, en una línea>. Se publica en <Vercel | Railway | infraestructura propia>.
 
 ## Alcance
 - <capacidad>

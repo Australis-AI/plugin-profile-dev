@@ -44,7 +44,9 @@ system-wide.
 ```
 
 - Issue work: `feat/<N>-<slug>` for new behaviour, `fix/<N>-<slug>` for a bug.
-- Quick fixes without an issue: `fix/<slug>` (or `chore/`, `docs/` when that fits better).
+- Small changes have an issue too, so they use the same names.
+- Kit housekeeping without an issue (the `App publicada` line that `/publicar` writes):
+  `docs/<slug>`.
 - The slug is short, **English**, lowercase, hyphenated, even when the issue is in Spanish:
   issue *"Cargar un gasto"* → `feat/2-add-expense`.
 - Always branch from the default branch after `git pull --ff-only`.
@@ -91,7 +93,7 @@ Closes #<N>
 
 Rules:
 - `Closes #<N>` on its own first line, so merging closes the issue.
-- Quick fixes without an issue: no `Closes` line.
+- Kit housekeeping without an issue: no `Closes` line.
 - Never paste raw logs; summarize command, exit code, counts.
 
 Commands:
