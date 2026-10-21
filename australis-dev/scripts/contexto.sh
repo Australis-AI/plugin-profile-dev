@@ -110,6 +110,11 @@ if [ -n "$nwo" ]; then
     --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null | paste -sd';' -)"
   say epica_abierta "${epic:-ninguna}"
 
+  # Milestones are built in creation order: the open one with the lowest number is the current one.
+  ms="$("$GH" api "repos/$nwo/milestones?state=open&per_page=100" \
+    --jq 'sort_by(.number) | .[0] // empty | "\(.title) (\(.closed_issues) de \(.open_issues + .closed_issues) issues cerrados)"' 2>/dev/null)"
+  say milestone_actual "${ms:-ninguno}"
+
   if [ -n "$current" ] && [ "$current" != "$default" ]; then
     pr="$("$GH" pr view "$current" --json number,state,reviewDecision \
       --jq '"#\(.number) \(.state) \(.reviewDecision // "")"' 2>/dev/null)"

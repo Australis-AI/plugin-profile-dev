@@ -66,8 +66,10 @@ entender ─▶ acordar ─▶ construir ─▶ probar ─▶ integrar ─▶ pu
 Es la forma de trabajar de un equipo profesional, y el kit la opera por vos:
 
 1. **Entender.** Te hago unas pocas preguntas sobre qué querés lograr y para quién.
-2. **Acordar.** Armo una **épica** en GitHub: el objetivo y la lista de pasos. Cada paso es un
-   **issue** con su "listo cuando". La aprobás una vez.
+2. **Acordar.** Armo una **épica** en GitHub: el objetivo y la lista de pasos. Los pasos se
+   agrupan en **milestones**, tramos que al cerrarse te dejan algo que ya podés usar, y se
+   construyen uno después del otro. Cada paso es un **issue** con su "listo cuando". La aprobás
+   una vez.
 3. **Construir.** Cada issue se hace en su propia **rama**, con pruebas y una revisión automática
    hecha por alguien que no escribió el código. Las pruebas automáticas cubren lo que no se ve
    usando la app (permisos, que no se pierdan ni se rompan datos, reglas y cálculos); lo que se

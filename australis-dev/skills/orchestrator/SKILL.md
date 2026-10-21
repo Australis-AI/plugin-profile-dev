@@ -43,7 +43,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/contexto.sh"
 
 It prints `key: value` lines: `nivel`, `onedrive`, `repo`, `firma_git`, `remoto`, `github`,
 `repo_github`, `rama_por_defecto`, `rama_actual`, `commits_en_rama_por_defecto`,
-`commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `epica_abierta`, `pr_de_la_rama`,
+`commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `epica_abierta`, `milestone_actual`,
+`pr_de_la_rama`,
 `comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`,
 `escala`, `deploy`, `app_publicada`.
 Read it silently. Re-run it after any step that changes branches or GitHub state.
@@ -119,27 +120,31 @@ gh repo create <owner>/<slug> --private --add-readme --gitignore Node --clone
 Load `${CLAUDE_PLUGIN_ROOT}/skills/descubrir/SKILL.md` and follow it. It returns the goal, who it
 is for, scope, out of scope, and any technical constraints the user stated in their own words.
 
-### 3. Draft the epic and issues
+### 3. Draft the epic, its milestones and issues
 
-Load `${CLAUDE_PLUGIN_ROOT}/skills/epica-issues/SKILL.md` and draft the epic and its ordered
-issues. For a new app (case B or C), issue #1 is always *"Base del proyecto"*.
+Load `${CLAUDE_PLUGIN_ROOT}/skills/epica-issues/SKILL.md` and draft the epic, its milestones and
+their ordered issues. Every issue belongs to one milestone; each milestone ends with something
+the user can use. For a new app (case B or C), issue #1 is always *"Base del proyecto"*, in M1.
 
 ### 4. Gate — the user approves the epic
 
 Show the epic as the user will read it: goal, scale and where it is published, scope, out of
-scope, and the numbered list of issues with their "listo cuando" criteria. At `dev`, add the
-technical approach and main risks in up to three lines, including what the scale implies (a
-*plataforma* gets an API from the first data issue). Close with: *"¿La aprobás así, o cambiamos algo?"* Then **stop and wait**.
+scope, and then each milestone with what can be done when it closes and its numbered issues with
+their "listo cuando" criteria. At `dev`, add the technical approach and main risks in up to three
+lines, including what the scale implies (a *plataforma* gets an API from the first data issue).
+Close with: *"¿La aprobás así, o cambiamos algo?"* Then **stop and wait**.
 
 - Changes requested: apply them to the draft and show the gate again.
 - Approved: write to GitHub, in this order —
   1. `gh label create epica --color 5319E7 --force`
-  2. each issue in order with `gh issue create --title … --body-file …`, reading the number from
-     the returned URL;
-  3. the epic last, with label `epica`, its task list `- [ ] #N` pointing at the real numbers, and
-     the line *"Aprobada en la sesión del <fecha>."*
-- Tell the user the epic number and the first issue in one line, then continue straight into
-  **Build an issue** with the first one. No extra approval is needed to start building.
+  2. each milestone, in order, as in *Creating them* of `epica-issues`;
+  3. each issue in order with `gh issue create --title … --milestone "<milestone>" --body-file …`,
+     reading the number from the returned URL;
+  4. the epic last, with label `epica`, its task list grouped by milestone pointing at the real
+     numbers, and the line *"Aprobada en la sesión del <fecha>."*
+- Tell the user the epic number, the first milestone and the first issue in one line, then
+  continue straight into **Build an issue** with the first one. No extra approval is needed to
+  start building.
 
 ---
 
@@ -148,9 +153,11 @@ technical approach and main risks in up to three lines, including what the scale
 ### 1. Pick the issue
 
 The number given, or the first open issue in the task list of the open epic (`gh issue view
-<epic> --json body`). No open epic: at `aprendiz` suggest `/nuevo`; at `dev` list open issues
-(`gh issue list`). More than one open epic: ask which. At `dev`, building an issue outside the
-epic adds it to the epic's task list.
+<epic> --json body`). The list is grouped by milestone in order, so this is always an issue of the
+earliest open milestone: milestones are built one after the other, never two at once. No open
+epic: at `aprendiz` suggest `/nuevo`; at `dev` list open issues (`gh issue list`). More than one
+open epic: ask which. At `dev`, building an issue outside the epic adds it to the epic's task list
+and to the current milestone (`gh issue edit <N> --milestone "<milestone>"`).
 
 An issue with the label `cambio-chico` is built as a **Small change**, from its step 2.
 
@@ -285,8 +292,14 @@ In a team repo, instead of `integrar`: *"Queda esperando la revisión de tu equi
 2. If `gh pr checks <pr>` shows failures that are not inherited, do not merge; offer `corregir`.
 3. `gh pr merge <pr> --squash --delete-branch`, then `git checkout <default>` and `git pull
    --ff-only`, then delete `.australis/trabajo/<N>/`.
-4. If it was the last open issue of the epic, close the epic with a one-line comment.
-5. Offer the next issue in one line: *"¿Seguimos con el #M: <título>?"*
+4. **Milestone closed?** If it was the last open issue of its milestone, close the milestone
+   (`gh api -X PATCH repos/<owner>/<repo>/milestones/<number> -f state=closed`) and say what can
+   be done now, from the milestone's *"Qué se va a poder hacer"*, in one or two lines. When the
+   app is published, that is also what is now in production. This is the natural moment for the
+   user to go through the app before the next milestone: offer it, do not require it.
+5. If it was the last open issue of the epic, close the epic with a one-line comment.
+6. Offer the next issue in one line: *"¿Seguimos con el #M: <título>?"*, naming the milestone
+   when a new one starts.
 
 **Integrating with an unmet criterion** (the user wants it anyway): create issue #M in the epic
 with that criterion, mark its test `it.todo('<criterio> (#M)')` (or the runner's skip
@@ -393,7 +406,8 @@ becomes one line in the open epic's body, not a file.
    | PR open, `CHANGES_REQUESTED` | Read `gh pr view --comments`, correction batch |
    | PR open | Result gate |
 
-2. Otherwise, with an open epic: say which issues are done and propose the next one. Without an
+2. Otherwise, with an open epic: say which milestone is in progress, which of its issues are done,
+   and propose the next one. Without an
    epic: suggest `/nuevo`.
 3. Greet with context in one sentence and one question, e.g. *"Veníamos con «Gastos»: está
    hecho el #1 y sigue el #2, cargar un gasto. ¿Vamos?"*
