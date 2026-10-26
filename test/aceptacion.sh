@@ -243,6 +243,44 @@ STUB
   echo '{ tipo_de_repo: roto' > "$tt/repo/australis.json"
   r="$(tipo otro)"; [ "$r" = "equipo prs aviso" ] && ok "tipo: JSON inválido avisa y calcula como siempre" \
     || no "tipo: un JSON inválido no se manejó bien" "$r"
+  # australis.json also carries doc_producto: a file without tipo_de_repo is not "inválido".
+  echo '{ "doc_producto": "docs/PRODUCTO.md" }' > "$tt/repo/australis.json"
+  r="$(tipo)"; [ "$r" = "una-persona default" ] && ok "tipo: australis.json sin tipo_de_repo no avisa" \
+    || no "tipo: un australis.json sin tipo_de_repo avisó o cambió el cálculo" "$r"
+  echo '{ "tipo_de_repo": "equipos" }' > "$tt/repo/australis.json"
+  r="$(tipo otro)"; [ "$r" = "equipo prs aviso" ] && ok "tipo: valor desconocido avisa y calcula como siempre" \
+    || no "tipo: un valor desconocido no se manejó bien" "$r"
+
+  # Product document: docs/PRODUCTO.md at the root, or the path australis.json declares under
+  # "doc_producto". The declared one wins, but only a file that exists and stays inside the repo.
+  doc() {  # prints "<ruta|ninguno> [aviso]"
+    ( cd "$tt/repo" && env PATH="$tt/bin:$CLEAN_PATH" HOME="$H" bash "$P/scripts/contexto.sh" 2>&1 ) \
+      | awk -F': ' '/^doc_producto:/{d=$2} /^aviso: doc_producto/{a=" aviso"} END{print d a}'
+  }
+  rm -f "$tt/repo/australis.json"
+  r="$(doc)"; [ "$r" = "ninguno" ] && ok "doc_producto: sin documento ni archivo, ninguno" \
+    || no "doc_producto: sin nada no dijo ninguno" "$r"
+  mkdir -p "$tt/repo/docs" "$tt/repo/producto"
+  echo '# Producto' > "$tt/repo/docs/PRODUCTO.md"; echo '# Producto' > "$tt/repo/producto/LEEME.md"
+  r="$(doc)"; [ "$r" = "docs/PRODUCTO.md" ] && ok "doc_producto: docs/PRODUCTO.md en la raíz" \
+    || no "doc_producto: no encontró docs/PRODUCTO.md" "$r"
+  echo '{ "doc_producto": "producto/LEEME.md" }' > "$tt/repo/australis.json"
+  r="$(doc)"; [ "$r" = "producto/LEEME.md" ] && ok "doc_producto: la ruta de australis.json gana a docs/PRODUCTO.md" \
+    || no "doc_producto: la ruta declarada no se respetó" "$r"
+  rm -f "$tt/repo/docs/PRODUCTO.md"
+  r="$(doc)"; [ "$r" = "producto/LEEME.md" ] && ok "doc_producto: la ruta de australis.json sin docs/PRODUCTO.md" \
+    || no "doc_producto: la ruta declarada no alcanzó sola" "$r"
+  echo '{ "doc_producto": "producto/no-existe.md" }' > "$tt/repo/australis.json"
+  echo '# Producto' > "$tt/repo/docs/PRODUCTO.md"
+  r="$(doc)"; [ "$r" = "docs/PRODUCTO.md aviso" ] && ok "doc_producto: ruta declarada que no existe avisa y cae a docs/PRODUCTO.md" \
+    || no "doc_producto: una ruta inexistente no se manejó bien" "$r"
+  echo '# afuera' > "$tt/PRODUCTO.md"; echo '{ "doc_producto": "../PRODUCTO.md" }' > "$tt/repo/australis.json"
+  r="$(doc)"; [ "$r" = "docs/PRODUCTO.md aviso" ] && ok "doc_producto: una ruta que sale del repo se ignora y avisa" \
+    || no "doc_producto: aceptó un archivo de afuera del repo" "$r"
+  mkdir -p "$tt/solo/docs" && ( cd "$tt/solo" && git init -q ) && echo '# Producto' > "$tt/solo/docs/PRODUCTO.md"
+  r="$( cd "$tt/solo" && env PATH="$tt/bin:$CLEAN_PATH" HOME="$H" bash "$P/scripts/contexto.sh" 2>&1 | awk -F': ' '/^doc_producto:/{print $2}')"
+  [ "$r" = "docs/PRODUCTO.md" ] && ok "doc_producto: también sin remoto de GitHub" \
+    || no "doc_producto: depende de GitHub" "$r"
   rm -rf "$tt"
 fi
 
