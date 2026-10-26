@@ -45,7 +45,7 @@ It prints `key: value` lines: `nivel`, `onedrive`, `repo`, `firma_git`, `remoto`
 `repo_github`, `rama_por_defecto`, `rama_actual`, `commits_en_rama_por_defecto`,
 `commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `tipo_de_repo_origen`, `epica_abierta`,
 `milestone_actual`,
-`pr_de_la_rama`,
+`pr_de_la_rama`, `doc_producto`,
 `comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`,
 `escala`, `deploy`, `app_publicada`.
 Read it silently. Re-run it after any step that changes branches or GitHub state.
@@ -120,6 +120,12 @@ gh repo create <owner>/<slug> --private --add-readme --gitignore Node --clone
 
 Load `${CLAUDE_PLUGIN_ROOT}/skills/descubrir/SKILL.md` and follow it. It returns the goal, who it
 is for, scope, out of scope, and any technical constraints the user stated in their own words.
+
+With a `doc_producto` in the context (not `ninguno`), discovery is built on that document and also
+returns where the work sits in the product (público, roles, related feature, journey, data, one-off
+or recurring, how we will know it works). The epic carries those lines and the gate shows them. If
+the context says `aviso: doc_producto …`, the path declared in `australis.json` is being ignored:
+tell the user in one line.
 
 ### 3. Draft the epic, its milestones and issues
 
