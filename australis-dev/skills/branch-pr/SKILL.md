@@ -111,3 +111,9 @@ gh pr merge <pr> --squash --delete-branch                    # only from the res
 When the context says `tipo_de_repo: equipo`, request review from the people who reviewed or
 authored recent PRs (`gh pr edit <pr> --add-reviewer <login>`) only if the user names them or the
 repository has `CODEOWNERS` (GitHub assigns those automatically). Never merge a team PR.
+
+The type can be fixed by the project in `australis.json` at the repository root, versioned with
+the code: `{ "tipo_de_repo": "una-persona" }` or `{ "tipo_de_repo": "equipo" }`. It beats
+`CODEOWNERS` and the logins seen in recent PRs; `tipo_de_repo_origen` in the context says where
+the value came from (`config`, `codeowners`, `prs` or `default`). Use `una-persona` for a project
+with one main developer who integrates alone even when other people open PRs.
