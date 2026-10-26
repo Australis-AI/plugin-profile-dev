@@ -4,7 +4,8 @@
 #   bash contexto.sh
 #
 # Prints one "key: value" line per fact about the current folder: git and
-# GitHub state, the open epic, how the project runs its tests, and the level.
+# GitHub state, the open epic, the product document, how the project runs its
+# tests, and the level.
 # Read-only. Always exits 0, so a failed probe never aborts a command.
 # Windows Git Bash safe: no jq (gh has its own --jq), node used only if present.
 
@@ -99,14 +100,15 @@ if [ -n "$nwo" ]; then
   tipo=""
   origen=""
   if [ -f australis.json ]; then
-    declared=""
-    [ -n "$NODE" ] && declared="$("$NODE" -e "try{const v=JSON.parse(require('fs').readFileSync('australis.json','utf8').replace(/^﻿/,'')).tipo_de_repo;if(v==='una-persona'||v==='equipo')process.stdout.write(v)}catch(e){}" 2>/dev/null)"
-    if [ -n "$declared" ]; then
-      tipo="$declared"
-      origen=config
-    else
-      say aviso "australis.json inválido, se ignora"
-    fi
+    # australis.json also carries doc_producto, so a file without tipo_de_repo is fine. "?" is
+    # anything unusable: broken JSON, an unknown value, or no node to read it with.
+    declared="?"
+    [ -n "$NODE" ] && declared="$("$NODE" -e "try{const v=JSON.parse(require('fs').readFileSync('australis.json','utf8').replace(/^﻿/,'')).tipo_de_repo;if(v!==undefined)process.stdout.write(v==='una-persona'||v==='equipo'?v:'?')}catch(e){process.stdout.write('?')}" 2>/dev/null)"
+    case "$declared" in
+      una-persona|equipo) tipo="$declared"; origen=config ;;
+      "") ;;
+      *) say aviso "australis.json inválido, se ignora" ;;
+    esac
   fi
   if [ -z "$tipo" ]; then
     for f in CODEOWNERS .github/CODEOWNERS docs/CODEOWNERS; do
@@ -138,6 +140,25 @@ if [ -n "$nwo" ]; then
     say pr_de_la_rama "${pr:-ninguno}"
   fi
 fi
+
+# --- Product document ----------------------------------------------------------
+# Discovery leans on it when the project has one: the path australis.json declares under
+# "doc_producto", else docs/PRODUCTO.md at the root. Only a file that exists counts, and a
+# declared path has to stay inside the repository (relative, no "..").
+doc=""
+if [ -f australis.json ] && [ -n "$NODE" ]; then
+  declared_doc="$("$NODE" -e "try{const v=JSON.parse(require('fs').readFileSync('australis.json','utf8').replace(/^﻿/,'')).doc_producto;if(typeof v==='string')process.stdout.write(v)}catch(e){}" 2>/dev/null)"
+  declared_doc="$(printf '%s' "$declared_doc" | tr '\\' '/')"
+  if [ -n "$declared_doc" ]; then
+    case "$declared_doc" in
+      /*|?:*|..|../*|*/..|*/../*) ;;
+      *) [ -f "$declared_doc" ] && doc="$declared_doc" ;;
+    esac
+    [ -z "$doc" ] && say aviso "doc_producto de australis.json no existe o sale del repo ($declared_doc), se ignora"
+  fi
+fi
+[ -z "$doc" ] && [ -f docs/PRODUCTO.md ] && doc="docs/PRODUCTO.md"
+say doc_producto "${doc:-ninguno}"
 
 # --- project commands ----------------------------------------------------------
 pm=npm

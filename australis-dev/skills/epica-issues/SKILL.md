@@ -130,6 +130,16 @@ Title: the product or feature name, no prefix (*"Gastos personales"*). Label: `e
 ## Para quién
 <quién y en qué situación>
 
+## En el producto
+<sólo si el descubrimiento trajo estos campos (el proyecto tiene documento de producto); si no, omitir la sección>
+- **Público:** <…>
+- **Roles (existentes o nuevos):** <…>
+- **Feature existente relacionada:** <…>
+- **Recorrido o etapa:** <…>
+- **Datos (existentes o nuevos):** <…>
+- **Puntual o recurrente:** <…>
+- **Cómo sabemos si sirve:** <…>
+
 ## Escala
 <prototipo | producto | plataforma> — <por qué, en una línea>. Se publica en <Vercel | Railway | infraestructura propia>.
 
@@ -154,6 +164,11 @@ Title: the product or feature name, no prefix (*"Gastos personales"*). Label: `e
 ---
 Aprobada en la sesión del <AAAA-MM-DD>.
 ```
+
+**En el producto** exists only when the discovery brought the product lines (the project has a
+product document). Copy them as they came, in the document's words: the person who approves the
+epic is also approving where the feature sits in the product. Without them, omit the section and
+the epic is as it always was.
 
 ## Creating them (the orchestrator runs this after approval)
 

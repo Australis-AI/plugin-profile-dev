@@ -125,6 +125,30 @@ Lo declarado en `australis.json` manda sobre `CODEOWNERS`, y `CODEOWNERS` manda 
 deduce de los PRs. Ninguna opción saltea la aprobación del resultado («Esto anda») ni integra con
 pruebas en rojo.
 
+### Proyectos con documento de producto
+
+Si el repo tiene un `docs/PRODUCTO.md` (qué es el producto, para qué públicos, qué roles hay, qué
+features existen y cómo se suma una nueva), el kit lo lee entero antes de hacerte la primera
+pregunta de una feature nueva. Con él:
+
+- Te pregunta lo que pide la sección «Cómo se suma una feature», en ese orden y con esas palabras.
+- Compara lo que pedís con el mapa de features. Si ya existe algo parecido, te lo dice y te
+  pregunta si conviene ampliarlo en vez de armar otra cosa.
+- Si lo que pedís necesita un rol que no está en el catálogo, te lo marca y te pregunta si es una
+  capacidad nueva de un rol que ya existe o un rol nuevo.
+- La épica que aprobás suma una sección «En el producto»: público, roles, feature relacionada,
+  recorrido, datos, si es puntual o recurrente y cómo vamos a saber si sirve.
+
+Si el documento vive en otro lugar, el proyecto lo declara en el mismo `australis.json`, con la
+ruta desde la raíz del repo:
+
+```json
+{ "tipo_de_repo": "una-persona", "doc_producto": "docs/producto/PRODUCTO.md" }
+```
+
+Si esa ruta no existe, el kit te avisa y usa `docs/PRODUCTO.md` cuando está. Sin documento de
+producto no cambia nada: el kit pregunta y arma la épica como siempre.
+
 ### Cambios chicos
 
 Un cambio chico (un texto, un color, un arreglo, un campo, un filtro) no pasa por todo el método,
