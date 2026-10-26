@@ -94,17 +94,34 @@ fi
 
 # --- GitHub: repo type, epic, PR ------------------------------------------------
 if [ -n "$nwo" ]; then
-  tipo="una-persona"
-  for f in CODEOWNERS .github/CODEOWNERS docs/CODEOWNERS; do
-    [ -f "$f" ] && tipo="equipo"
-  done
-  if [ "$tipo" = "una-persona" ] && [ -n "$login" ]; then
+  # Repo type, first source that answers: australis.json (versioned, at the root),
+  # then CODEOWNERS, then other people in the last 50 PRs, then one person.
+  tipo=""
+  origen=""
+  if [ -f australis.json ]; then
+    declared=""
+    [ -n "$NODE" ] && declared="$("$NODE" -e "try{const v=JSON.parse(require('fs').readFileSync('australis.json','utf8').replace(/^﻿/,'')).tipo_de_repo;if(v==='una-persona'||v==='equipo')process.stdout.write(v)}catch(e){}" 2>/dev/null)"
+    if [ -n "$declared" ]; then
+      tipo="$declared"
+      origen=config
+    else
+      say aviso "australis.json inválido, se ignora"
+    fi
+  fi
+  if [ -z "$tipo" ]; then
+    for f in CODEOWNERS .github/CODEOWNERS docs/CODEOWNERS; do
+      [ -f "$f" ] && { tipo="equipo"; origen=codeowners; }
+    done
+  fi
+  if [ -z "$tipo" ] && [ -n "$login" ]; then
     others="$("$GH" pr list --state all --limit 50 --json author,reviews \
       --jq '[.[].author.login, (.[].reviews[].author.login)] | unique | .[]' 2>/dev/null \
       | grep -v -x -F "$login" | grep -v -i 'bot' | head -1)"
-    [ -n "$others" ] && tipo="equipo"
+    [ -n "$others" ] && { tipo="equipo"; origen=prs; }
   fi
+  [ -z "$tipo" ] && { tipo="una-persona"; origen=default; }
   say tipo_de_repo "$tipo"
+  say tipo_de_repo_origen "$origen"
 
   epic="$("$GH" issue list --label epica --state open --limit 5 --json number,title \
     --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null | paste -sd';' -)"

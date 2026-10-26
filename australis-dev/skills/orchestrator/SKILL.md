@@ -43,7 +43,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/contexto.sh"
 
 It prints `key: value` lines: `nivel`, `onedrive`, `repo`, `firma_git`, `remoto`, `github`,
 `repo_github`, `rama_por_defecto`, `rama_actual`, `commits_en_rama_por_defecto`,
-`commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `epica_abierta`, `milestone_actual`,
+`commits_totales`, `cambios_sin_commitear`, `tipo_de_repo`, `tipo_de_repo_origen`, `epica_abierta`,
+`milestone_actual`,
 `pr_de_la_rama`,
 `comando_test`, `comando_dev`, `comando_build`, `comando_lint`, `gestor_paquetes`, `stack`,
 `escala`, `deploy`, `app_publicada`.
@@ -228,7 +229,9 @@ documentation, so neither of them forces a second battery.
 
 ### 6. Review
 
-By `tipo_de_repo`, never by level:
+By `tipo_de_repo`, never by level. A project can fix it in `australis.json` at its root
+(`tipo_de_repo_origen: config`); that beats `CODEOWNERS` and the other logins seen in its PRs. When
+the context says `aviso: australis.json inválido, se ignora`, tell the user in one line.
 
 - **una-persona:** one blind reviewer, `australis-dev:jd-judge-a`, in single-reviewer mode (prompt
   in `${CLAUDE_PLUGIN_ROOT}/skills/judgment-day/references/prompts-and-formats.md`), over

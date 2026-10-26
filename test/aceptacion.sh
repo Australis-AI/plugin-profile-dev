@@ -200,6 +200,52 @@ else
   no "falta scripts/contexto.sh"
 fi
 
+# Repo type: australis.json beats CODEOWNERS, which beats other logins in the PRs.
+# A fake gh answers as "martin" and, when STUB_OTHERS is set, lists PRs by someone else.
+if [ -f "$P/scripts/contexto.sh" ]; then
+  tt="$(mktemp -d)"
+  mkdir -p "$tt/bin" "$tt/repo"
+  cat > "$tt/bin/gh" <<'STUB'
+#!/usr/bin/env bash
+case "$1 $2" in
+  "auth status") exit 0 ;;
+  "api user") echo martin ;;
+  "repo view") case "$*" in *nameWithOwner*) echo Org/repo ;; *defaultBranchRef*) echo main ;; esac ;;
+  "pr list") [ -n "${STUB_OTHERS:-}" ] && printf '%s\n' martin "$STUB_OTHERS" ;;
+  "pr view") exit 1 ;;
+esac
+exit 0
+STUB
+  chmod +x "$tt/bin/gh"
+  ( cd "$tt/repo" && git init -q && git remote add origin https://github.com/Org/repo.git )
+  tipo() {  # prints "<tipo> <origen> [aviso]"
+    ( cd "$tt/repo" && env PATH="$tt/bin:$CLEAN_PATH" HOME="$H" STUB_OTHERS="${1:-}" bash "$P/scripts/contexto.sh" 2>&1 ) \
+      | awk -F': ' '/^tipo_de_repo:/{t=$2} /^tipo_de_repo_origen:/{o=$2} /^aviso: australis.json/{a=" aviso"} END{print t" "o a}'
+  }
+
+  echo '{ "tipo_de_repo": "una-persona" }' > "$tt/repo/australis.json"
+  r="$(tipo otro)"; [ "$r" = "una-persona config" ] && ok "tipo: australis.json una-persona gana a PRs de otros" \
+    || no "tipo: australis.json una-persona no se respetó" "$r"
+  echo '{ "tipo_de_repo": "equipo" }' > "$tt/repo/australis.json"
+  r="$(tipo)"; [ "$r" = "equipo config" ] && ok "tipo: australis.json equipo sin PRs de otros" \
+    || no "tipo: australis.json equipo no se respetó" "$r"
+  echo '{ "tipo_de_repo": "una-persona" }' > "$tt/repo/australis.json"; echo '* @x' > "$tt/repo/CODEOWNERS"
+  r="$(tipo)"; [ "$r" = "una-persona config" ] && ok "tipo: australis.json gana a CODEOWNERS" \
+    || no "tipo: CODEOWNERS le ganó a australis.json" "$r"
+  rm -f "$tt/repo/australis.json"
+  r="$(tipo)"; [ "$r" = "equipo codeowners" ] && ok "tipo: sin archivo, CODEOWNERS como siempre" \
+    || no "tipo: CODEOWNERS dejó de funcionar" "$r"
+  rm -f "$tt/repo/CODEOWNERS"
+  r="$(tipo otro)"; [ "$r" = "equipo prs" ] && ok "tipo: sin archivo, PRs de otros como siempre" \
+    || no "tipo: el cálculo por PRs cambió" "$r"
+  r="$(tipo)"; [ "$r" = "una-persona default" ] && ok "tipo: sin archivo ni otros, una persona" \
+    || no "tipo: el valor por defecto cambió" "$r"
+  echo '{ tipo_de_repo: roto' > "$tt/repo/australis.json"
+  r="$(tipo otro)"; [ "$r" = "equipo prs aviso" ] && ok "tipo: JSON inválido avisa y calcula como siempre" \
+    || no "tipo: un JSON inválido no se manejó bien" "$r"
+  rm -rf "$tt"
+fi
+
 # ------------------------------------------------------------------ safety --
 head_ "4. Seguridad"
 

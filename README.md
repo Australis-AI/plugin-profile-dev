@@ -100,6 +100,31 @@ Al planificar se definen dos cosas que cambian cómo se construye:
 
 Las dos quedan anotadas en el README del proyecto.
 
+### Proyectos de una persona o de equipo
+
+El kit trabaja distinto según quién integra:
+
+- **De una persona:** corre la revisión automática y, cuando aprobás el resultado, integra él.
+- **De equipo:** no corre la revisión automática, deja el PR esperando la revisión de una persona
+  y nunca integra.
+
+Lo deduce solo: es de equipo si el repo tiene un archivo `CODEOWNERS`, o si en los últimos pull
+requests aparece otra persona. Cuando eso no refleja cómo se trabaja, el proyecto lo declara en
+un archivo `australis.json` en la raíz del repo, que se sube con el código:
+
+```json
+{ "tipo_de_repo": "una-persona" }
+```
+
+El caso típico: un desarrollador principal que integra solo, aunque otros abran PRs de vez en
+cuando. Sin el archivo, alcanza con que alguien más abra un PR para que el kit deje todo
+esperando una revisión que nadie va a hacer. Al revés, `"equipo"` obliga a la revisión humana
+aunque por ahora trabaje una sola persona.
+
+Lo declarado en `australis.json` manda sobre `CODEOWNERS`, y `CODEOWNERS` manda sobre lo que se
+deduce de los PRs. Ninguna opción saltea la aprobación del resultado («Esto anda») ni integra con
+pruebas en rojo.
+
 ### Cambios chicos
 
 Un cambio chico (un texto, un color, un arreglo, un campo, un filtro) no pasa por todo el método,
